@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FracturePoint</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <img src="NameLogo.jpg" alt="FracturePoint" class="logo-image">
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#" class="nav-link active" data-page="shows">Upcoming Shows</a></li>
+                <li><a href="#" class="nav-link" data-page="photos">Photos & Video</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Upcoming Shows Section (Landing Page) -->
+        <section id="shows" class="page-section active">
+            <div class="content-wrapper">
+                <h2 class="section-title">Upcoming Shows</h2>
+                <div class="shows-table-container">
+                    <table class="shows-table" id="upcoming-shows-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Set Time</th>
+                                <th>Venue</th>
+                                <th>City</th>
+                                <th>Pre Order Tickets</th>
+                                <th>Buy Tickets</th>
+                            </tr>
+                        </thead>
+                        <tbody id="upcoming-shows">
+                            <tr>
+                                <td colspan="6" class="loading">Loading shows data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="shows-cards-mobile" id="upcoming-shows-cards">
+                    <div class="show-card-mobile loading">
+                        <div class="show-venue">Loading shows data...</div>
+                    </div>
+                </div>
+                <h2 class="section-title" style="margin-top: 4rem;">Past Shows</h2>
+                <div class="shows-container" id="past-shows">
+                    <div class="show-card loading">
+                        <div class="show-date">Loading...</div>
+                        <div class="show-venue">Fetching shows data...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Photos & Video Section -->
+        <section id="photos" class="page-section">
+            <div class="content-wrapper">
+                <h2 class="section-title">Photos & Video</h2>
+                <div class="media-container">
+                    <div class="media-placeholder">
+                        <p>Media content coming soon...</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
