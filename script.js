@@ -145,7 +145,8 @@ function getBuyTicketsHTML(show) {
 function renderShows(upcomingShows, pastShows) {
     const upcomingTbody = document.getElementById('upcoming-shows');
     const upcomingCards = document.getElementById('upcoming-shows-cards');
-    const pastContainer = document.getElementById('past-shows');
+    const pastTbody = document.getElementById('past-shows');
+    const pastCards = document.getElementById('past-shows-cards');
     
     // Render upcoming shows as table rows (desktop)
     if (upcomingShows.length === 0) {
@@ -198,21 +199,55 @@ function renderShows(upcomingShows, pastShows) {
         }
     }
     
-    // Render past shows (keep as cards)
+    // Render past shows as table rows (desktop)
     if (pastShows.length === 0) {
-        pastContainer.innerHTML = `
-            <div class="show-card">
-                <div class="show-venue">No past shows to display</div>
-            </div>
+        pastTbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="no-shows">No past shows to display</td>
+            </tr>
         `;
+        if (pastCards) {
+            pastCards.innerHTML = `
+                <div class="show-card-mobile">
+                    <div class="show-venue">No past shows to display</div>
+                </div>
+            `;
+        }
     } else {
-        pastContainer.innerHTML = pastShows.map(show => `
-            <div class="show-card">
-                <div class="show-date">${formatDate(show.date)}</div>
-                <div class="show-venue">${show.venue || 'TBA'}</div>
-                <div class="show-location">${show.location || show.city || ''}</div>
-            </div>
-        `).join('');
+        pastTbody.innerHTML = pastShows.map(show => {
+            const buyTicketsHTML = getBuyTicketsHTML(show);
+            const ticketPrice = show.ticket_price || show.price || 'TBA';
+            
+            return `
+            <tr>
+                <td class="show-date">${formatDate(show.date)}</td>
+                <td class="show-time">${show.set_time || 'TBA'}</td>
+                <td class="show-venue">${show.venue || 'TBA'}</td>
+                <td class="show-city">${show.city || ''}</td>
+                <td class="show-price">${ticketPrice}</td>
+                <td class="show-tickets">${buyTicketsHTML}</td>
+            </tr>
+        `;
+        }).join('');
+        
+        // Render past shows as cards (mobile)
+        if (pastCards) {
+            pastCards.innerHTML = pastShows.map(show => {
+                const buyTicketsHTML = getBuyTicketsHTML(show);
+                const ticketPrice = show.ticket_price || show.price || 'TBA';
+                
+                return `
+                <div class="show-card-mobile">
+                    <div class="show-date">${formatDate(show.date)}</div>
+                    <div class="show-time">Set Time: ${show.set_time || 'TBA'}</div>
+                    <div class="show-venue">${show.venue || 'TBA'}</div>
+                    <div class="show-city">${show.city || ''}</div>
+                    <div class="show-price">Pre Order Tickets: ${ticketPrice}</div>
+                    <div class="show-tickets-mobile">${buyTicketsHTML}</div>
+                </div>
+            `;
+            }).join('');
+        }
     }
 }
 

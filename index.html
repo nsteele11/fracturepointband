@@ -49,10 +49,28 @@
                     </div>
                 </div>
                 <h2 class="section-title" style="margin-top: 4rem;">Past Shows</h2>
-                <div class="shows-container" id="past-shows">
-                    <div class="show-card loading">
-                        <div class="show-date">Loading...</div>
-                        <div class="show-venue">Fetching shows data...</div>
+                <div class="shows-table-container">
+                    <table class="shows-table" id="past-shows-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Set Time</th>
+                                <th>Venue</th>
+                                <th>City</th>
+                                <th>Pre Order Tickets</th>
+                                <th>Buy Tickets</th>
+                            </tr>
+                        </thead>
+                        <tbody id="past-shows">
+                            <tr>
+                                <td colspan="6" class="loading">Loading shows data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="shows-cards-mobile" id="past-shows-cards">
+                    <div class="show-card-mobile loading">
+                        <div class="show-venue">Loading shows data...</div>
                     </div>
                 </div>
             </div>
