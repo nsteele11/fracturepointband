@@ -47,24 +47,39 @@ async function fetchShowsData() {
 // Parse CSV data format
 function parseCSVData(csvText) {
     const shows = [];
-    const lines = csvText.trim().split('\n');
+    // Handle both \r\n and \n line endings
+    const lines = csvText.trim().split(/\r?\n/).filter(line => line.trim().length > 0);
     
     if (lines.length < 2) {
+        console.log('Not enough lines in CSV:', lines.length);
         return shows; // Need at least header and one data row
     }
     
     // Parse headers
     const headers = parseCSVLine(lines[0]);
+    console.log('CSV Headers:', headers);
     
     // Parse data rows
     for (let i = 1; i < lines.length; i++) {
         const values = parseCSVLine(lines[i]);
         const show = {};
         
+        // Debug first row
+        if (i === 1) {
+            console.log('First data row values:', values);
+            console.log('Number of headers:', headers.length, 'Number of values:', values.length);
+        }
+        
         headers.forEach((header, index) => {
             if (values[index] !== undefined) {
-                const key = header.toLowerCase().replace(/\s+/g, '_');
-                show[key] = values[index].trim();
+                const key = header.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                // Clean the value - remove quotes and trim
+                let value = values[index].trim();
+                // Remove surrounding quotes if present
+                if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+                    value = value.slice(1, -1);
+                }
+                show[key] = value;
             }
         });
         
@@ -72,6 +87,11 @@ function parseCSVData(csvText) {
         if (show.date || show.venue) {
             shows.push(show);
         }
+    }
+    
+    console.log('Parsed shows count:', shows.length);
+    if (shows.length > 0) {
+        console.log('Sample parsed show:', shows[0]);
     }
     
     return shows;
@@ -217,31 +237,28 @@ function renderShows(upcomingShows, pastShows) {
         // Debug: log first past show to see structure
         if (pastShows.length > 0) {
             console.log('First past show data:', pastShows[0]);
+            console.log('All past show keys:', Object.keys(pastShows[0]));
         }
         
         pastTbody.innerHTML = pastShows.map(show => {
-            // Extract fields with fallbacks for various column name variations
-            const date = show.date || show.date_ || '';
-            const setTime = show.set_time || show.settime || show.time || show.set_time_ || 'TBA';
-            const venue = show.venue || show.venue_ || 'TBA';
-            const city = show.city || show.city_ || show.location || '';
-            const ticketPrice = show.ticket_price || show.ticketprice || show.price || show.price_ || 'TBA';
+            // Use the exact same field extraction as upcoming shows
             const buyTicketsHTML = getBuyTicketsHTML(show);
+            const ticketPrice = show.ticket_price || show.price || 'TBA';
             
-            // Ensure we're only using string values, not objects
-            const safeDate = typeof date === 'string' ? date : (date ? String(date) : '');
-            const safeSetTime = typeof setTime === 'string' ? setTime : (setTime ? String(setTime) : 'TBA');
-            const safeVenue = typeof venue === 'string' ? venue : (venue ? String(venue) : 'TBA');
-            const safeCity = typeof city === 'string' ? city : (city ? String(city) : '');
-            const safeTicketPrice = typeof ticketPrice === 'string' ? ticketPrice : (ticketPrice ? String(ticketPrice) : 'TBA');
+            // Extract and clean each field - same as upcoming shows
+            const date = (show.date || '').toString().trim();
+            const setTime = (show.set_time || 'TBA').toString().trim();
+            const venue = (show.venue || 'TBA').toString().trim();
+            const city = (show.city || '').toString().trim();
+            const price = (ticketPrice || 'TBA').toString().trim();
             
             return `
             <tr>
-                <td class="show-date">${formatDate(safeDate)}</td>
-                <td class="show-time">${safeSetTime}</td>
-                <td class="show-venue">${safeVenue}</td>
-                <td class="show-city">${safeCity}</td>
-                <td class="show-price">${safeTicketPrice}</td>
+                <td class="show-date">${formatDate(date)}</td>
+                <td class="show-time">${setTime}</td>
+                <td class="show-venue">${venue}</td>
+                <td class="show-city">${city}</td>
+                <td class="show-price">${price}</td>
                 <td class="show-tickets">${buyTicketsHTML}</td>
             </tr>
         `;
