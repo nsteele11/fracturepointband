@@ -214,17 +214,34 @@ function renderShows(upcomingShows, pastShows) {
             `;
         }
     } else {
+        // Debug: log first past show to see structure
+        if (pastShows.length > 0) {
+            console.log('First past show data:', pastShows[0]);
+        }
+        
         pastTbody.innerHTML = pastShows.map(show => {
+            // Extract fields with fallbacks for various column name variations
+            const date = show.date || show.date_ || '';
+            const setTime = show.set_time || show.settime || show.time || show.set_time_ || 'TBA';
+            const venue = show.venue || show.venue_ || 'TBA';
+            const city = show.city || show.city_ || show.location || '';
+            const ticketPrice = show.ticket_price || show.ticketprice || show.price || show.price_ || 'TBA';
             const buyTicketsHTML = getBuyTicketsHTML(show);
-            const ticketPrice = show.ticket_price || show.price || 'TBA';
+            
+            // Ensure we're only using string values, not objects
+            const safeDate = typeof date === 'string' ? date : (date ? String(date) : '');
+            const safeSetTime = typeof setTime === 'string' ? setTime : (setTime ? String(setTime) : 'TBA');
+            const safeVenue = typeof venue === 'string' ? venue : (venue ? String(venue) : 'TBA');
+            const safeCity = typeof city === 'string' ? city : (city ? String(city) : '');
+            const safeTicketPrice = typeof ticketPrice === 'string' ? ticketPrice : (ticketPrice ? String(ticketPrice) : 'TBA');
             
             return `
             <tr>
-                <td class="show-date">${formatDate(show.date)}</td>
-                <td class="show-time">${show.set_time || 'TBA'}</td>
-                <td class="show-venue">${show.venue || 'TBA'}</td>
-                <td class="show-city">${show.city || ''}</td>
-                <td class="show-price">${ticketPrice}</td>
+                <td class="show-date">${formatDate(safeDate)}</td>
+                <td class="show-time">${safeSetTime}</td>
+                <td class="show-venue">${safeVenue}</td>
+                <td class="show-city">${safeCity}</td>
+                <td class="show-price">${safeTicketPrice}</td>
                 <td class="show-tickets">${buyTicketsHTML}</td>
             </tr>
         `;
@@ -233,15 +250,20 @@ function renderShows(upcomingShows, pastShows) {
         // Render past shows as cards (mobile)
         if (pastCards) {
             pastCards.innerHTML = pastShows.map(show => {
+                // Extract fields with fallbacks for various column name variations
+                const date = show.date || show.date_ || '';
+                const setTime = show.set_time || show.settime || show.time || show.set_time_ || 'TBA';
+                const venue = show.venue || show.venue_ || 'TBA';
+                const city = show.city || show.city_ || show.location || '';
+                const ticketPrice = show.ticket_price || show.ticketprice || show.price || show.price_ || 'TBA';
                 const buyTicketsHTML = getBuyTicketsHTML(show);
-                const ticketPrice = show.ticket_price || show.price || 'TBA';
                 
                 return `
                 <div class="show-card-mobile">
-                    <div class="show-date">${formatDate(show.date)}</div>
-                    <div class="show-time">Set Time: ${show.set_time || 'TBA'}</div>
-                    <div class="show-venue">${show.venue || 'TBA'}</div>
-                    <div class="show-city">${show.city || ''}</div>
+                    <div class="show-date">${formatDate(date)}</div>
+                    <div class="show-time">Set Time: ${setTime}</div>
+                    <div class="show-venue">${venue}</div>
+                    <div class="show-city">${city}</div>
                     <div class="show-price">Pre Order Tickets: ${ticketPrice}</div>
                     <div class="show-tickets-mobile">${buyTicketsHTML}</div>
                 </div>
