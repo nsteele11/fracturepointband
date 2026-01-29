@@ -154,8 +154,8 @@ function getBuyTicketsHTML(show) {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
     } else if (buyTicketsOption.toLowerCase() === 'email') {
-        const emailAddress = show.contact_email || show.email || show.ticket_email || 'info@fracturepoint.com';
-        return `<a href="mailto:${emailAddress}?subject=Ticket Request for ${show.venue || 'Show'}" class="ticket-link">Email for Tickets</a>`;
+        // Email button is temporarily disabled while email address is being finalized
+        return '<span class="ticket-link-disabled">Email for Tickets</span>';
     } else {
         return '<span class="ticket-link-disabled">Not Available</span>';
     }
