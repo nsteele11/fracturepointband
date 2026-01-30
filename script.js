@@ -144,18 +144,26 @@ function formatDate(dateString) {
 
 // Helper function to get buy tickets HTML
 function getBuyTicketsHTML(show) {
-    const buyTicketsOption = (show.buy_tickets_option || '').trim();
+    const buyTicketsOption = (show.buy_tickets_option || '').trim().toLowerCase();
     
-    if (buyTicketsOption.toLowerCase() === 'online') {
+    if (buyTicketsOption === 'online') {
         const ticketUrl = show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
         if (ticketUrl === '#') {
             return '<span class="ticket-link-disabled">Not Available</span>';
         } else {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
-    } else if (buyTicketsOption.toLowerCase() === 'email') {
+    } else if (buyTicketsOption === 'email') {
         // Email button is temporarily disabled while email address is being finalized
         return '<span class="ticket-link-disabled">Email for Tickets</span>';
+    } else if (buyTicketsOption.includes('square')) {
+        // Square integration - show Buy Tickets button with link
+        const ticketUrl = show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
+        if (ticketUrl === '#') {
+            return '<span class="ticket-link-disabled">Not Available</span>';
+        } else {
+            return `<a href="${ticketUrl}" target="_blank" class="ticket-link ticket-link-square">Buy Tickets</a>`;
+        }
     } else {
         return '<span class="ticket-link-disabled">Not Available</span>';
     }
@@ -219,11 +227,11 @@ function renderShows(upcomingShows, pastShows) {
         }
     }
     
-    // Render past shows as table rows (desktop)
+    // Render past shows as table rows (desktop) - no Buy Tickets column
     if (pastShows.length === 0) {
         pastTbody.innerHTML = `
             <tr>
-                <td colspan="6" class="no-shows">No past shows to display</td>
+                <td colspan="5" class="no-shows">No past shows to display</td>
             </tr>
         `;
         if (pastCards) {
@@ -234,15 +242,7 @@ function renderShows(upcomingShows, pastShows) {
             `;
         }
     } else {
-        // Debug: log first past show to see structure
-        if (pastShows.length > 0) {
-            console.log('First past show data:', pastShows[0]);
-            console.log('All past show keys:', Object.keys(pastShows[0]));
-        }
-        
         pastTbody.innerHTML = pastShows.map(show => {
-            // Use the exact same field extraction as upcoming shows
-            const buyTicketsHTML = getBuyTicketsHTML(show);
             const ticketPrice = show.ticket_price || show.price || 'TBA';
             
             // Extract and clean each field - same as upcoming shows
@@ -259,7 +259,6 @@ function renderShows(upcomingShows, pastShows) {
                 <td class="show-venue">${venue}</td>
                 <td class="show-city">${city}</td>
                 <td class="show-price">${price}</td>
-                <td class="show-tickets">${buyTicketsHTML}</td>
             </tr>
         `;
         }).join('');

@@ -260,6 +260,19 @@ body::before {
     color: var(--bg-black);
 }
 
+.shows-table .ticket-link-square {
+    font-weight: 600;
+    background-color: rgba(184, 160, 130, 0.1);
+    border: 2px solid var(--pewter-gold);
+}
+
+.shows-table .ticket-link-square:hover {
+    background-color: var(--pewter-gold);
+    color: var(--bg-black);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(184, 160, 130, 0.3);
+}
+
 .shows-table .ticket-link-disabled {
     color: var(--pewter-gold);
     font-weight: 600;
