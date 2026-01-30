@@ -147,26 +147,15 @@ function getBuyTicketsHTML(show) {
     const buyTicketsOption = (show.buy_tickets_option || '').trim().toLowerCase();
     
     if (buyTicketsOption === 'online') {
-        const ticketUrl = show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
-        if (ticketUrl === '#') {
+        // Get link from the 'Link' column (check various possible field names)
+        const ticketUrl = show.link || show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
+        if (ticketUrl === '#' || !ticketUrl) {
             return '<span class="ticket-link-disabled">Not Available</span>';
         } else {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
-    } else if (buyTicketsOption === 'email') {
-        // Email option - show Buy Tickets button that links to email
-        const emailAddress = show.contact_email || show.email || show.ticket_email || 'info@fracturepoint.com';
-        return `<a href="mailto:${emailAddress}?subject=Ticket Request for ${show.venue || 'Show'}" class="ticket-link">Buy Tickets</a>`;
-    } else if (buyTicketsOption.includes('square')) {
-        // Square integration - show Buy Tickets button with link
-        const ticketUrl = show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
-        if (ticketUrl === '#') {
-            return '<span class="ticket-link-disabled">Not Available</span>';
-        } else {
-            return `<a href="${ticketUrl}" target="_blank" class="ticket-link ticket-link-square">Buy Tickets</a>`;
-        }
     } else {
-        // Only show "Not Available" if square is not in the option
+        // For Email, None, or any other option - show Not Available
         return '<span class="ticket-link-disabled">Not Available</span>';
     }
 }
