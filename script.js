@@ -154,8 +154,9 @@ function getBuyTicketsHTML(show) {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
     } else if (buyTicketsOption === 'email') {
-        // Email button is temporarily disabled while email address is being finalized
-        return '<span class="ticket-link-disabled">Email for Tickets</span>';
+        // Email option - show Buy Tickets button that links to email
+        const emailAddress = show.contact_email || show.email || show.ticket_email || 'info@fracturepoint.com';
+        return `<a href="mailto:${emailAddress}?subject=Ticket Request for ${show.venue || 'Show'}" class="ticket-link">Buy Tickets</a>`;
     } else if (buyTicketsOption.includes('square')) {
         // Square integration - show Buy Tickets button with link
         const ticketUrl = show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
@@ -165,6 +166,7 @@ function getBuyTicketsHTML(show) {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link ticket-link-square">Buy Tickets</a>`;
         }
     } else {
+        // Only show "Not Available" if square is not in the option
         return '<span class="ticket-link-disabled">Not Available</span>';
     }
 }
