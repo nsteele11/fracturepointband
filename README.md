@@ -8,7 +8,7 @@ Website for the band FracturePoint.
 - Matte pewter/gold navigation buttons
 - Two main sections:
   - **Upcoming Shows** (landing page)
-  - **Media**
+  - **Photos & Video**
 
 ## Setup
 
