@@ -143,42 +143,24 @@ function formatDate(dateString) {
 }
 
 // Helper function to get buy tickets HTML
+// Buy_Tickets_Option values: "Online" (link), "Door Sales Only" (text), anything else ("Not Available")
 function getBuyTicketsHTML(show) {
-    // Check multiple possible column names (sheet header variations)
-    let buyTicketsOption = (
-        show.buy_tickets_option ||
-        show.buyticketsoption ||
-        show.buy_ticket_option ||
-        show.ticket_option ||
-        show.tickets_option ||
-        show.tickets ||
-        ''
-    ).toString().trim().toLowerCase();
-    
-    // Fallback: search all show props for ticket-related values (handles unknown column names)
-    if (!buyTicketsOption) {
-        const found = Object.entries(show).find(([k, v]) => {
-            const val = (v || '').toString().trim().toLowerCase();
-            return val === 'door only' || val === 'doors only' || (val.includes('door') && val.includes('only'));
-        });
-        if (found) buyTicketsOption = found[1].toString().trim().toLowerCase();
-    }
+    // Column may appear as buy_tickets_option or buyticketsoption depending on header format
+    const buyTicketsOption = (show.buy_tickets_option || show.buyticketsoption || '').toString().trim().toLowerCase();
     
     if (buyTicketsOption === 'online') {
-        // Get link from the 'Link' column (check various possible field names)
         const ticketUrl = show.link || show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
         if (ticketUrl === '#' || !ticketUrl) {
             return '<span class="ticket-link-disabled">Not Available</span>';
-        } else {
-            return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
-    } else if (buyTicketsOption.includes('door') && buyTicketsOption.includes('only')) {
-        // "Door Only", "Doors Only", "door only", etc.
-        return '<span class="ticket-link-disabled">Door Sales Only</span>';
-    } else {
-        // For Email, None, or any other option - show Not Available
-        return '<span class="ticket-link-disabled">Not Available</span>';
+        return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
     }
+    
+    if (buyTicketsOption === 'door sales only') {
+        return '<span class="ticket-link-disabled">Door Sales Only</span>';
+    }
+    
+    return '<span class="ticket-link-disabled">Not Available</span>';
 }
 
 // Render shows to the page
