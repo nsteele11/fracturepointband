@@ -72,7 +72,7 @@ function parseCSVData(csvText) {
         
         headers.forEach((header, index) => {
             if (values[index] !== undefined) {
-                const key = header.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                const key = header.toString().trim().toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
                 // Clean the value - remove quotes and trim
                 let value = values[index].trim();
                 // Remove surrounding quotes if present
@@ -92,6 +92,7 @@ function parseCSVData(csvText) {
     console.log('Parsed shows count:', shows.length);
     if (shows.length > 0) {
         console.log('Sample parsed show:', shows[0]);
+        console.log('CSV keys for first show:', Object.keys(shows[0]));
     }
     
     return shows;
@@ -145,8 +146,26 @@ function formatDate(dateString) {
 // Helper function to get buy tickets HTML
 // Buy_Tickets_Option values: "Online" (link), "Door Sales Only" (text), anything else ("Not Available")
 function getBuyTicketsHTML(show) {
-    // Column may appear as buy_tickets_option or buyticketsoption depending on header format
-    const buyTicketsOption = (show.buy_tickets_option || show.buyticketsoption || '').toString().trim().toLowerCase();
+    // Find Buy Tickets Option value - check common column name variations
+    const ticketOptionKeys = ['buy_tickets_option', 'buyticketsoption', 'buy_ticket_option', 'ticket_option', 'tickets_option', 'buy_tickets'];
+    let buyTicketsOption = '';
+    for (const key of ticketOptionKeys) {
+        if (show[key]) {
+            buyTicketsOption = show[key].toString().trim();
+            break;
+        }
+    }
+    // Fallback: search for any key containing 'ticket' or 'option' with matching value
+    if (!buyTicketsOption) {
+        for (const [key, val] of Object.entries(show)) {
+            const v = (val || '').toString().trim().toLowerCase();
+            if ((key.includes('ticket') || key.includes('option')) && (v === 'online' || v === 'door sales only')) {
+                buyTicketsOption = val.toString().trim();
+                break;
+            }
+        }
+    }
+    buyTicketsOption = buyTicketsOption.toLowerCase().replace(/\s+/g, ' ');
     
     if (buyTicketsOption === 'online') {
         const ticketUrl = show.link || show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
@@ -156,7 +175,7 @@ function getBuyTicketsHTML(show) {
         return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
     }
     
-    if (buyTicketsOption === 'door sales only') {
+    if (buyTicketsOption === 'door sales only' || (buyTicketsOption.includes('door') && buyTicketsOption.includes('sales') && buyTicketsOption.includes('only'))) {
         return '<span class="ticket-link-disabled">Door Sales Only</span>';
     }
     
