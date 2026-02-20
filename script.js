@@ -144,7 +144,25 @@ function formatDate(dateString) {
 
 // Helper function to get buy tickets HTML
 function getBuyTicketsHTML(show) {
-    const buyTicketsOption = (show.buy_tickets_option || '').trim().toLowerCase();
+    // Check multiple possible column names (sheet header variations)
+    let buyTicketsOption = (
+        show.buy_tickets_option ||
+        show.buyticketsoption ||
+        show.buy_ticket_option ||
+        show.ticket_option ||
+        show.tickets_option ||
+        show.tickets ||
+        ''
+    ).toString().trim().toLowerCase();
+    
+    // Fallback: search all show props for ticket-related values (handles unknown column names)
+    if (!buyTicketsOption) {
+        const found = Object.entries(show).find(([k, v]) => {
+            const val = (v || '').toString().trim().toLowerCase();
+            return val === 'door only' || val === 'doors only' || (val.includes('door') && val.includes('only'));
+        });
+        if (found) buyTicketsOption = found[1].toString().trim().toLowerCase();
+    }
     
     if (buyTicketsOption === 'online') {
         // Get link from the 'Link' column (check various possible field names)
@@ -154,7 +172,8 @@ function getBuyTicketsHTML(show) {
         } else {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
-    } else if (buyTicketsOption === 'door only') {
+    } else if (buyTicketsOption.includes('door') && buyTicketsOption.includes('only')) {
+        // "Door Only", "Doors Only", "door only", etc.
         return '<span class="ticket-link-disabled">Door Sales Only</span>';
     } else {
         // For Email, None, or any other option - show Not Available
