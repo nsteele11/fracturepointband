@@ -154,6 +154,8 @@ function getBuyTicketsHTML(show) {
         } else {
             return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
+    } else if (buyTicketsOption === 'doors only') {
+        return '<span class="ticket-link-disabled">Doors Only</span>';
     } else {
         // For Email, None, or any other option - show Not Available
         return '<span class="ticket-link-disabled">Not Available</span>';
