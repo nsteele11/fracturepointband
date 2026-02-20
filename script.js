@@ -144,42 +144,38 @@ function formatDate(dateString) {
 }
 
 // Helper function to get buy tickets HTML
-// Buy_Tickets_Option values: "Online" (link), "Door Sales Only" (text), anything else ("Not Available")
+// Online = Buy Tickets link (when URL exists). All other values = display exact sheet text.
 function getBuyTicketsHTML(show) {
     // Find Buy Tickets Option value - check common column name variations
     const ticketOptionKeys = ['buy_tickets_option', 'buyticketsoption', 'buy_ticket_option', 'ticket_option', 'tickets_option', 'buy_tickets'];
-    let buyTicketsOption = '';
+    let rawValue = '';
     for (const key of ticketOptionKeys) {
         if (show[key]) {
-            buyTicketsOption = show[key].toString().trim();
+            rawValue = show[key].toString().trim();
             break;
         }
     }
-    // Fallback: search for any key containing 'ticket' or 'option' with matching value
-    if (!buyTicketsOption) {
+    // Fallback: search for any key containing 'ticket' or 'option'
+    if (!rawValue) {
         for (const [key, val] of Object.entries(show)) {
-            const v = (val || '').toString().trim().toLowerCase();
-            if ((key.includes('ticket') || key.includes('option')) && (v === 'online' || v === 'door sales only')) {
-                buyTicketsOption = val.toString().trim();
+            if ((key.includes('ticket') || key.includes('option')) && val) {
+                rawValue = val.toString().trim();
                 break;
             }
         }
     }
-    buyTicketsOption = buyTicketsOption.toLowerCase().replace(/\s+/g, ' ');
+    const normalizedValue = rawValue.toLowerCase().replace(/\s+/g, ' ');
     
-    if (buyTicketsOption === 'online') {
+    if (normalizedValue === 'online') {
         const ticketUrl = show.link || show.ticket_url || show.tickets || show.ticket_link || show.url || '#';
-        if (ticketUrl === '#' || !ticketUrl) {
-            return '<span class="ticket-link-disabled">Not Available</span>';
+        if (ticketUrl && ticketUrl !== '#') {
+            return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
         }
-        return `<a href="${ticketUrl}" target="_blank" class="ticket-link">Buy Tickets</a>`;
+        return `<span class="ticket-link-disabled">${rawValue || 'Online'}</span>`;
     }
     
-    if (buyTicketsOption === 'door sales only' || (buyTicketsOption.includes('door') && buyTicketsOption.includes('sales') && buyTicketsOption.includes('only'))) {
-        return '<span class="ticket-link-disabled">Door Sales Only</span>';
-    }
-    
-    return '<span class="ticket-link-disabled">Not Available</span>';
+    // Display exact sheet value for all other options
+    return `<span class="ticket-link-disabled">${rawValue || ''}</span>`;
 }
 
 // Render shows to the page
