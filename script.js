@@ -168,6 +168,17 @@ function getBuyTicketsHTML(show) {
             }
         }
     }
+    // Fallback: search all properties for ticket option values (handles unknown column names)
+    if (!rawValue) {
+        for (const [, val] of Object.entries(show)) {
+            const v = (val || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
+            if (v === 'online' || v === 'door sales only' || (v.includes('door') && v.includes('sales') && v.includes('only'))) {
+                rawValue = (val || '').toString().trim();
+                break;
+            }
+        }
+    }
+    
     const normalizedValue = rawValue.toLowerCase().replace(/\s+/g, ' ');
     
     if (normalizedValue === 'online') {
