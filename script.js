@@ -12,6 +12,7 @@ async function fetchShowsData() {
         const shows = parseCSVData(csvText);
         
         // Separate upcoming and past shows
+        // Use sheet data (ticket info, etc.) until one day after the show date
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
@@ -22,8 +23,11 @@ async function fetchShowsData() {
             if (show.date) {
                 const showDate = new Date(show.date);
                 showDate.setHours(0, 0, 0, 0);
+                const dayAfterShow = new Date(showDate);
+                dayAfterShow.setDate(dayAfterShow.getDate() + 1);
                 
-                if (showDate >= today) {
+                // Upcoming through end of day after show (use sheet data until then)
+                if (today <= dayAfterShow) {
                     upcomingShows.push(show);
                 } else {
                     pastShows.push(show);
