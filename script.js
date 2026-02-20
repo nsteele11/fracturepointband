@@ -59,8 +59,12 @@ function parseCSVData(csvText) {
         return shows; // Need at least header and one data row
     }
     
-    // Parse headers
-    const headers = parseCSVLine(lines[0]);
+    // Parse headers (strip BOM from first header if present)
+    let headerLine = lines[0];
+    if (headerLine.charCodeAt(0) === 0xFEFF) {
+        headerLine = headerLine.slice(1);
+    }
+    const headers = parseCSVLine(headerLine);
     console.log('CSV Headers:', headers);
     
     // Parse data rows
@@ -148,31 +152,26 @@ function formatDate(dateString) {
 }
 
 // Helper function to get buy tickets HTML
-// Online = Buy Tickets link (when URL exists). All other values = display exact sheet text.
+// Sheet column: Buy_Tickets_Option. Online = link, other values = display exact sheet text.
 function getBuyTicketsHTML(show) {
-    // Find Buy Tickets Option value - check common column name variations
-    const ticketOptionKeys = ['buy_tickets_option', 'buyticketsoption', 'buy_ticket_option', 'ticket_option', 'tickets_option', 'buy_tickets'];
-    let rawValue = '';
-    for (const key of ticketOptionKeys) {
-        if (show[key]) {
-            rawValue = show[key].toString().trim();
-            break;
-        }
-    }
-    // Fallback: search for any key containing 'ticket' or 'option'
+    // Primary: Buy_Tickets_Option (header normalizes to buy_tickets_option)
+    let rawValue = (show.buy_tickets_option || '').toString().trim();
+    
+    // Fallback: try matching key by normalized name (handles header variations)
     if (!rawValue) {
-        for (const [key, val] of Object.entries(show)) {
-            if ((key.includes('ticket') || key.includes('option')) && val) {
-                rawValue = val.toString().trim();
-                break;
-            }
-        }
+        const targetKey = 'buy_tickets_option';
+        const found = Object.keys(show).find(k => 
+            k.replace(/[^a-z0-9_]/g, '') === targetKey || 
+            k.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') === targetKey
+        );
+        if (found) rawValue = (show[found] || '').toString().trim();
     }
-    // Fallback: search all properties for ticket option values (handles unknown column names)
+    
+    // Fallback: find "Door Sales Only" or "Online" in any column (handles column name mismatch)
     if (!rawValue) {
-        for (const [, val] of Object.entries(show)) {
+        for (const val of Object.values(show)) {
             const v = (val || '').toString().trim().toLowerCase().replace(/\s+/g, ' ');
-            if (v === 'online' || v === 'door sales only' || (v.includes('door') && v.includes('sales') && v.includes('only'))) {
+            if (v === 'door sales only' || v === 'online' || (v.includes('door') && v.includes('sales') && v.includes('only'))) {
                 rawValue = (val || '').toString().trim();
                 break;
             }
