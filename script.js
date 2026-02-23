@@ -15,6 +15,8 @@ const YOUTUBE_CHANNEL_ID = 'UCam1SbBcBmBG7Siruznfdhw';
 const YOUTUBE_PLAYLISTS = { 'live-shows': '', 'the-band': '', 'behind-the-scenes': '' };
 // Cloudinary subfolders per category - must match folder names in Cloudinary
 const CLOUDINARY_CATEGORIES = { 'live-shows': 'Live Shows', 'the-band': 'The Band', 'behind-the-scenes': 'Behind the Scenes' };
+// Categories to always show as grayed out / disabled until photos/videos are added - remove from array when ready
+const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
@@ -421,8 +423,10 @@ function initMediaGallery() {
         const media = currentMedia;
         subtabs.forEach((tab) => {
             const cat = tab.dataset.category;
+            const isManuallyDisabled = MANUALLY_DISABLED_CATEGORIES.includes(cat);
             const items = (cache[media] && cache[media][cat]) || [];
-            if (items.length === 0) {
+            const isEmpty = items.length === 0;
+            if (isManuallyDisabled || isEmpty) {
                 tab.classList.add('disabled');
                 tab.setAttribute('aria-disabled', 'true');
             } else {
@@ -431,8 +435,10 @@ function initMediaGallery() {
             }
         });
         const currentItems = (cache[media] && cache[media][currentCategory]) || [];
-        if (currentItems.length === 0) {
-            const firstWithContent = categories.find((c) => (cache[media] && cache[media][c] || []).length > 0);
+        const isCurrentManuallyDisabled = MANUALLY_DISABLED_CATEGORIES.includes(currentCategory);
+        if ((currentItems.length === 0 || isCurrentManuallyDisabled)) {
+            const selectableCategories = categories.filter((c) => !MANUALLY_DISABLED_CATEGORIES.includes(c));
+            const firstWithContent = selectableCategories.find((c) => (cache[media] && cache[media][c] || []).length > 0);
             if (firstWithContent) {
                 currentCategory = firstWithContent;
                 subtabs.forEach((t) => t.classList.remove('active'));
