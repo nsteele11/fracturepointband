@@ -4,8 +4,9 @@ const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${GOOGLE_SHEE
 
 // Cloudinary configuration - photos load from folder (including subfolders) via Netlify function
 const CLOUDINARY_CLOUD_NAME = 'dhvetz6qg';
-const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' or 'fracturepoint' - empty = root folder
-const CLOUDINARY_LIST_URL = '/.netlify/functions/cloudinary-list'; // Netlify function endpoint
+const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty = root folder
+// Set your Netlify site URL if fetch fails (e.g. when using custom domain or local dev)
+const NETLIFY_SITE_URL = ''; // e.g. 'https://your-site.netlify.app' - leave empty to use current page origin
 
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
@@ -376,7 +377,7 @@ async function loadCloudinaryPhotos() {
             .join('');
     } catch (err) {
         console.error('Cloudinary photos error:', err);
-        container.innerHTML = `<div class="media-placeholder"><p>Could not load photos.</p><p class="media-error">${err.message}</p><p class="media-error" style="margin-top:1rem;font-size:0.9rem">Tip: Netlify functions require Git deploy (not drag-and-drop). Use CLOUDINARY_URL or set CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET in Netlify env vars.</p></div>`;
+        container.innerHTML = '<div class="media-placeholder"><p>Could not load photos.</p><p class="media-error">' + err.message + '</p></div>';
     }
 }
 
