@@ -533,17 +533,24 @@ body::before {
     display: flex;
 }
 
+.lightbox-close,
+.lightbox-prev,
+.lightbox-next {
+    z-index: 100;
+}
+
 .lightbox-close {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    background: none;
+    background: rgba(0, 0, 0, 0.5);
     border: none;
     color: var(--pewter-gold);
     font-size: 2.5rem;
     cursor: pointer;
     line-height: 1;
-    z-index: 1;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
 }
 
 .lightbox-prev,
@@ -551,14 +558,13 @@ body::before {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(184, 160, 130, 0.2);
+    background: rgba(0, 0, 0, 0.5);
     border: 2px solid var(--pewter-gold);
     color: var(--pewter-gold);
     font-size: 2rem;
     width: 50px;
     height: 50px;
     cursor: pointer;
-    z-index: 1;
     border-radius: 4px;
 }
 
@@ -604,6 +610,7 @@ body::before {
     transform: translateX(-50%);
     color: var(--text-muted);
     font-size: 0.9rem;
+    z-index: 100;
 }
 
 .media-photo-item img {
