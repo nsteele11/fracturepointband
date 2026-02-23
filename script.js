@@ -5,8 +5,8 @@ const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${GOOGLE_SHEE
 // Cloudinary configuration - photos load from folder (including subfolders) via Netlify function
 const CLOUDINARY_CLOUD_NAME = 'dhvetz6qg';
 const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty = root folder
-// Fallback if custom domain doesn't route /api/ - set your Netlify URL
-const NETLIFY_SITE_URL = 'https://fracturepointband.netlify.app';
+// Netlify URL - required when site is on different host (e.g. fracturepointband.com)
+const NETLIFY_SITE_URL = 'https://funny-cendol-31d47d.netlify.app';
 
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
@@ -338,10 +338,12 @@ async function loadCloudinaryPhotos() {
     container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
 
     const query = CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : '';
-    const urlsToTry = [
-        window.location.origin + '/api/cloudinary-list' + query,
-        (NETLIFY_SITE_URL || 'https://fracturepointband.netlify.app') + '/.netlify/functions/cloudinary-list' + query,
-    ];
+    const urlsToTry = NETLIFY_SITE_URL
+        ? [NETLIFY_SITE_URL + '/.netlify/functions/cloudinary-list' + query]
+        : [
+            window.location.origin + '/.netlify/functions/cloudinary-list' + query,
+            window.location.origin + '/api/cloudinary-list' + query,
+        ];
 
     let data;
     let lastError;
