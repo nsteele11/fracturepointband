@@ -415,9 +415,16 @@ body::before {
 }
 
 .subtab.disabled {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: not-allowed;
     pointer-events: none;
+    color: var(--text-muted);
+}
+
+.subtab.disabled:hover {
+    border-color: rgba(184, 160, 130, 0.5);
+    color: var(--text-muted);
+    background: transparent;
 }
 
 .media-content-area {
