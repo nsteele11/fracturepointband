@@ -22,7 +22,7 @@ Photos are loaded from a Cloudinary folder (including all subfolders). To enable
 
 1. **Deploy to Netlify** – The site must be deployed to Netlify for the folder-listing function to run.
 2. **Environment variables** – In Netlify Dashboard → Site settings → Environment variables, add: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
-3. **Configure folder** – In `script.js`, set `CLOUDINARY_FOLDER` to your folder path (e.g. `'band-photos'`). Leave empty to show all images from the root.
+3. **Configure folder** – In `script.js`, set `CLOUDINARY_FOLDER` to your folder path. For tabbed categories (Live Shows, The Band, Behind the Scenes), create subfolders with those exact names in Cloudinary.
 
 ### YouTube Videos
 

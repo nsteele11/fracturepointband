@@ -16,28 +16,26 @@ exports.handler = async (event) => {
 
     const apiKey = process.env.YOUTUBE_API_KEY;
     const channelId = event.queryStringParameters?.channelId || '';
+    let playlistId = event.queryStringParameters?.playlistId || '';
 
-    if (!apiKey || !channelId) {
+    if (!apiKey) {
         return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({
-                error: 'Missing YOUTUBE_API_KEY or channelId. Set YOUTUBE_API_KEY in Netlify env and pass channelId in query.',
-            }),
+            body: JSON.stringify({ error: 'Missing YOUTUBE_API_KEY in Netlify env.' }),
         };
     }
 
     try {
-        const uploadsRes = await fetch(
-            `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`
-        );
-        const uploadsData = await uploadsRes.json();
-
-        if (!uploadsData.items || uploadsData.items.length === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ videos: [] }) };
+        if (!playlistId && channelId) {
+            const uploadsRes = await fetch(
+                `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`
+            );
+            const uploadsData = await uploadsRes.json();
+            if (uploadsData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads) {
+                playlistId = uploadsData.items[0].contentDetails.relatedPlaylists.uploads;
+            }
         }
-
-        const playlistId = uploadsData.items[0].contentDetails?.relatedPlaylists?.uploads;
         if (!playlistId) {
             return { statusCode: 200, headers, body: JSON.stringify({ videos: [] }) };
         }

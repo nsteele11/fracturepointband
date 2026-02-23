@@ -81,24 +81,39 @@
         <section id="photos" class="page-section">
             <div class="content-wrapper">
                 <h2 class="section-title">Photos & Video</h2>
-                <div class="media-split-container">
-                    <div class="media-section media-section-video">
-                        <h3 class="media-section-title">Video</h3>
-                        <div class="media-section-content" id="video-section">
-                            <div class="media-placeholder">
-                                <p>Video content coming soon...</p>
-                            </div>
-                        </div>
+
+                <div class="media-tabs">
+                    <button type="button" class="media-tab active" data-media="video">Video</button>
+                    <button type="button" class="media-tab" data-media="photos">Photos</button>
+                </div>
+
+                <div class="media-subtabs">
+                    <button type="button" class="subtab active" data-category="live-shows">Live Shows</button>
+                    <button type="button" class="subtab" data-category="the-band">The Band</button>
+                    <button type="button" class="subtab" data-category="behind-the-scenes">Behind the Scenes</button>
+                </div>
+
+                <div class="media-content-area">
+                    <div id="video-panel" class="media-panel active">
+                        <div id="video-masonry" class="masonry-grid"></div>
+                        <div class="youtube-link-wrap"><a href="#" id="youtube-link" class="youtube-link" target="_blank" rel="noopener" style="display:none">Watch on YouTube</a></div>
                     </div>
-                    <div class="media-section media-section-photos">
-                        <h3 class="media-section-title">Photos</h3>
-                        <div class="media-section-content media-photos-grid" id="photos-section">
-                            <div class="media-placeholder media-loading">
-                                <p>Loading photos...</p>
-                            </div>
-                        </div>
+                    <div id="photos-panel" class="media-panel">
+                        <div id="photos-masonry" class="masonry-grid"></div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Lightbox -->
+            <div id="lightbox" class="lightbox" aria-hidden="true">
+                <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
+                <button type="button" class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
+                <button type="button" class="lightbox-next" aria-label="Next">&rsaquo;</button>
+                <div class="lightbox-content">
+                    <img id="lightbox-img" src="" alt="">
+                    <iframe id="lightbox-video" src="" frameborder="0" allowfullscreen style="display:none"></iframe>
+                </div>
+                <div class="lightbox-counter"><span id="lightbox-index">1</span> / <span id="lightbox-total">1</span></div>
             </div>
         </section>
     </main>

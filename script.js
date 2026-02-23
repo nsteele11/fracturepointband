@@ -10,7 +10,11 @@ const NETLIFY_SITE_URL = 'https://funny-cendol-31d47d.netlify.app';
 
 // YouTube - channel URL and ID for embedding videos
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/channel/UCam1SbBcBmBG7Siruznfdhw';
-const YOUTUBE_CHANNEL_ID = 'UCam1SbBcBmBG7Siruznfdhw'; // Required for video grid - add YOUTUBE_API_KEY to Netlify env
+const YOUTUBE_CHANNEL_ID = 'UCam1SbBcBmBG7Siruznfdhw';
+// Optional: playlist IDs per category (or use channel videos for all)
+const YOUTUBE_PLAYLISTS = { 'live-shows': '', 'the-band': '', 'behind-the-scenes': '' };
+// Cloudinary subfolders per category - must match folder names in Cloudinary
+const CLOUDINARY_CATEGORIES = { 'live-shows': 'Live Shows', 'the-band': 'The Band', 'behind-the-scenes': 'Behind the Scenes' };
 
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
@@ -329,148 +333,208 @@ function getCloudinaryUrl(publicId, width = 400, height = 400) {
     return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${transform}/${publicId}`;
 }
 
-// Load YouTube video section - fetches channel videos and displays embed grid
-async function loadYouTubeVideo() {
-    const container = document.getElementById('video-section');
-    if (!container || !YOUTUBE_CHANNEL_URL) {
-        if (container && !YOUTUBE_CHANNEL_URL) {
-            container.innerHTML = '<div class="media-placeholder"><p>Add your YouTube channel URL to YOUTUBE_CHANNEL_URL in script.js</p></div>';
-        }
-        return;
-    }
+// Media gallery state
+let lightboxItems = [];
+let lightboxIndex = 0;
+let touchStartX = 0;
 
-    const linkUrl = YOUTUBE_CHANNEL_URL.trim();
-    container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading videos...</p></div>';
-
-    if (!YOUTUBE_CHANNEL_ID) {
-        container.innerHTML = '<div class="youtube-channel-card"><p>Check out our YouTube channel for live performances, music videos, and more.</p></div><div class="youtube-link-wrap"><a href="' + linkUrl + '" target="_blank" rel="noopener" class="youtube-link">Watch on YouTube</a></div>';
-        return;
-    }
-
-    try {
-        const baseUrl = NETLIFY_SITE_URL || window.location.origin;
-        const apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        const videos = data.videos || [];
-        if (videos.length === 0) {
-            container.innerHTML = '<div class="youtube-channel-card"><p>Check out our YouTube channel for live performances, music videos, and more.</p></div><div class="youtube-link-wrap"><a href="' + linkUrl + '" target="_blank" rel="noopener" class="youtube-link">Watch on YouTube</a></div>';
-            return;
-        }
-
-        const videoGrid = videos
-            .map(
-                (v) =>
-                    '<div class="video-embed-item"><div class="video-embed-wrapper"><iframe src="https://www.youtube.com/embed/' +
-                    v.id +
-                    '" title="' +
-                    (v.title || 'Video').replace(/"/g, '&quot;') +
-                    '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div></div>'
-            )
-            .join('');
-
-        container.innerHTML = '<div class="video-grid">' + videoGrid + '</div><div class="youtube-link-wrap"><a href="' + linkUrl + '" target="_blank" rel="noopener" class="youtube-link">Watch on YouTube</a></div>';
-    } catch (err) {
-        console.error('YouTube videos error:', err);
-        container.innerHTML =
-            '<div class="youtube-channel-card"><p>Check out our YouTube channel for live performances, music videos, and more.</p></div><div class="youtube-link-wrap"><a href="' +
-            linkUrl +
-            '" target="_blank" rel="noopener" class="youtube-link">Watch on YouTube</a></div>';
-    }
+async function fetchYouTubeVideos(category) {
+    const playlistId = YOUTUBE_PLAYLISTS[category];
+    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+    let apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
+    if (playlistId) apiUrl = baseUrl + '/.netlify/functions/youtube-videos?playlistId=' + encodeURIComponent(playlistId);
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+    return data.videos || [];
 }
 
-// Load and render Cloudinary photos from folder (includes all subfolders)
-async function loadCloudinaryPhotos() {
-    const container = document.getElementById('photos-section');
-    if (!container) return;
+async function fetchCloudinaryPhotos(category) {
+    const subfolder = CLOUDINARY_CATEGORIES[category] || '';
+    const folder = CLOUDINARY_FOLDER ? (subfolder ? CLOUDINARY_FOLDER + '/' + subfolder : CLOUDINARY_FOLDER) : subfolder;
+    const foldersToTry = folder ? [folder, CLOUDINARY_FOLDER, ''] : [''];
+    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
 
-    if (!CLOUDINARY_CLOUD_NAME) {
-        container.innerHTML = '<div class="media-placeholder"><p>Set CLOUDINARY_CLOUD_NAME in script.js.</p></div>';
-        return;
-    }
-
-    container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
-
-    const foldersToTry = CLOUDINARY_FOLDER
-        ? [CLOUDINARY_FOLDER, '', 'FracturePoint_Photos', 'FracturePoint Photos', 'fracturepoint_photos']
-        : [''];
-    const seen = new Set();
-    const uniqueFolders = foldersToTry.filter((f) => {
-        const k = f.toLowerCase();
-        if (seen.has(k)) return false;
-        seen.add(k);
-        return true;
-    });
-
-    let data;
-    let lastError;
-    let usedFolder = '';
-
-    for (const folder of uniqueFolders) {
-        const query = folder ? '?folder=' + encodeURIComponent(folder) : '';
-        const baseUrl = NETLIFY_SITE_URL || window.location.origin;
-        const url = baseUrl + '/.netlify/functions/cloudinary-list' + query;
+    for (const f of foldersToTry) {
+        const url = baseUrl + '/.netlify/functions/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
         try {
-            const response = await fetch(url);
-            const text = await response.text();
-
-            try {
-                data = JSON.parse(text);
-            } catch (e) {
-                if (text.trim().startsWith('<')) continue;
-                throw new Error('Invalid response from server');
-            }
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to load photos');
-            }
-
-            const count = (data.resources || []).filter((r) =>
-                ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase())
-            ).length;
-            if (count > 0) {
-                usedFolder = folder;
-                break;
-            }
-        } catch (err) {
-            lastError = err;
-            if (err.message === 'Failed to fetch' || err.message.includes('Invalid response')) continue;
-            throw err;
-        }
+            const res = await fetch(url);
+            const data = await res.json();
+            const resources = (data.resources || []).filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
+            if (resources.length > 0) return resources.map((r) => ({ public_id: r.public_id }));
+        } catch (e) {}
     }
+    return [];
+}
 
-    try {
-        if (!data || !data.resources) {
-            throw lastError || new Error('Could not load photos from server');
+function openLightbox(items, index, isVideo) {
+    lightboxItems = items;
+    lightboxIndex = index;
+    const lb = document.getElementById('lightbox');
+    const img = document.getElementById('lightbox-img');
+    const vid = document.getElementById('lightbox-video');
+    const idxEl = document.getElementById('lightbox-index');
+    const totalEl = document.getElementById('lightbox-total');
+
+    function show() {
+        const item = lightboxItems[lightboxIndex];
+        if (!item) return;
+        if (isVideo) {
+            img.style.display = 'none';
+            vid.style.display = 'block';
+            vid.src = 'https://www.youtube.com/embed/' + item.id + '?autoplay=1';
+        } else {
+            vid.style.display = 'none';
+            vid.src = '';
+            img.style.display = 'block';
+            img.src = getCloudinaryUrl(item.public_id, 1920, 1920);
         }
+        idxEl.textContent = lightboxIndex + 1;
+        totalEl.textContent = lightboxItems.length;
+        lb.setAttribute('aria-hidden', 'false');
+    }
+    show();
+    lb._show = show;
+}
 
-        const resources = data.resources || [];
-        const images = resources.filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
+function closeLightbox() {
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightbox-video').src = '';
+    lb.setAttribute('aria-hidden', 'true');
+}
 
-        if (images.length === 0) {
-            container.innerHTML =
-                '<div class="media-placeholder"><p>No photos found. Check CLOUDINARY_FOLDER in script.js matches your Cloudinary folder name exactly (case-sensitive). Folder includes subfolders.</p><p class="media-error">Tried: ' +
-                (CLOUDINARY_FOLDER || 'root') +
-                ', FracturePoint_Photos, FracturePoint Photos, root</p></div>';
+function initMediaGallery() {
+    const mediaTabs = document.querySelectorAll('.media-tab');
+    const subtabs = document.querySelectorAll('.subtab');
+    const videoPanel = document.getElementById('video-panel');
+    const photosPanel = document.getElementById('photos-panel');
+    const videoMasonry = document.getElementById('video-masonry');
+    const photosMasonry = document.getElementById('photos-masonry');
+    const youtubeLink = document.getElementById('youtube-link');
+
+    let currentMedia = 'video';
+    let currentCategory = 'live-shows';
+    const cache = { video: {}, photos: {} };
+
+    async function loadVideos() {
+        videoMasonry.innerHTML = '<div class="media-placeholder media-loading" style="grid-column:1/-1"><p>Loading videos...</p></div>';
+        let videos = [];
+        try {
+            if (YOUTUBE_CHANNEL_ID) videos = await fetchYouTubeVideos(currentCategory);
+        } catch (e) {}
+        if (videos.length === 0) {
+            videoMasonry.innerHTML = '<div class="media-placeholder"><p>No videos in this category.</p></div>';
+            youtubeLink.style.display = 'inline-block';
+            youtubeLink.href = YOUTUBE_CHANNEL_URL;
             return;
         }
-
-        container.innerHTML = images
-            .map(({ public_id }) => {
-                const thumbUrl = getCloudinaryUrl(public_id, 300, 300);
-                const fullUrl = getCloudinaryUrl(public_id, 1200, 1200);
-                if (!thumbUrl) return '';
-                return `<a href="${fullUrl}" target="_blank" rel="noopener" class="media-photo-item" title="View full size">
-                    <img src="${thumbUrl}" alt="Band photo" loading="lazy">
-                </a>`;
-            })
-            .filter(Boolean)
+        const thumbBase = 'https://img.youtube.com/vi/';
+        videoMasonry.innerHTML = videos
+            .map(
+                (v, i) =>
+                    '<div class="masonry-item" data-type="video" data-index="' +
+                    i +
+                    '"><div class="masonry-thumb"><img src="' +
+                    thumbBase +
+                    v.id +
+                    '/mqdefault.jpg" alt="" loading="lazy"><span class="play-icon">&#9654;</span></div></div>'
+            )
             .join('');
-    } catch (err) {
-        console.error('Cloudinary photos error:', err);
-        container.innerHTML = '<div class="media-placeholder"><p>Could not load photos.</p><p class="media-error">' + err.message + '</p></div>';
+        youtubeLink.style.display = 'inline-block';
+        youtubeLink.href = YOUTUBE_CHANNEL_URL;
+        videoMasonry.querySelectorAll('.masonry-item').forEach((el, i) => {
+            el.addEventListener('click', () => openLightbox(videos, i, true));
+        });
     }
+
+    async function loadPhotos() {
+        photosMasonry.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
+        let images = [];
+        try {
+            if (CLOUDINARY_CLOUD_NAME) images = await fetchCloudinaryPhotos(currentCategory);
+        } catch (e) {}
+        if (images.length === 0) {
+            photosMasonry.innerHTML = '<div class="media-placeholder"><p>No photos in this category.</p></div>';
+            return;
+        }
+        photosMasonry.innerHTML = images
+            .map(
+                (img, i) =>
+                    '<div class="masonry-item" data-type="photo" data-index="' +
+                    i +
+                    '"><img src="' +
+                    getCloudinaryUrl(img.public_id, 400, 400) +
+                    '" alt="" loading="lazy"></div>'
+            )
+            .join('');
+        photosMasonry.querySelectorAll('.masonry-item').forEach((el, i) => {
+            el.addEventListener('click', () => openLightbox(images, i, false));
+        });
+    }
+
+    function switchContent() {
+        if (currentMedia === 'video') {
+            videoPanel.classList.add('active');
+            photosPanel.classList.remove('active');
+            loadVideos();
+        } else {
+            photosPanel.classList.add('active');
+            videoPanel.classList.remove('active');
+            loadPhotos();
+        }
+    }
+
+    mediaTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            mediaTabs.forEach((t) => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentMedia = tab.dataset.media;
+            switchContent();
+        });
+    });
+
+    subtabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            subtabs.forEach((t) => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentCategory = tab.dataset.category;
+            switchContent();
+        });
+    });
+
+    document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+    document.querySelector('.lightbox-prev').addEventListener('click', () => {
+        lightboxIndex = (lightboxIndex - 1 + lightboxItems.length) % lightboxItems.length;
+        document.getElementById('lightbox')._show();
+    });
+    document.querySelector('.lightbox-next').addEventListener('click', () => {
+        lightboxIndex = (lightboxIndex + 1) % lightboxItems.length;
+        document.getElementById('lightbox')._show();
+    });
+
+    document.getElementById('lightbox').addEventListener('click', (e) => {
+        if (e.target.id === 'lightbox') closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (document.getElementById('lightbox').getAttribute('aria-hidden') === 'true') return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') document.querySelector('.lightbox-prev').click();
+        if (e.key === 'ArrowRight') document.querySelector('.lightbox-next').click();
+    });
+
+    let touchStartX2 = 0;
+    document.getElementById('lightbox').addEventListener('touchstart', (e) => {
+        touchStartX2 = e.touches[0].clientX;
+    });
+    document.getElementById('lightbox').addEventListener('touchend', (e) => {
+        const diff = touchStartX2 - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) {
+            if (diff > 0) document.querySelector('.lightbox-next').click();
+            else document.querySelector('.lightbox-prev').click();
+        }
+    });
+
+    switchContent();
 }
 
 // Navigation functionality
@@ -512,10 +576,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderShows(upcomingShows, pastShows);
     });
 
-    // Load Cloudinary photos
-    loadCloudinaryPhotos();
-
-    // Load YouTube video
-    loadYouTubeVideo();
+    // Load media gallery (videos + photos with tabs)
+    initMediaGallery();
 });
 
