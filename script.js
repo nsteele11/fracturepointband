@@ -337,18 +337,25 @@ async function loadCloudinaryPhotos() {
 
     container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
 
-    const query = CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : '';
-    const urlsToTry = NETLIFY_SITE_URL
-        ? [NETLIFY_SITE_URL + '/.netlify/functions/cloudinary-list' + query]
-        : [
-            window.location.origin + '/.netlify/functions/cloudinary-list' + query,
-            window.location.origin + '/api/cloudinary-list' + query,
-        ];
+    const foldersToTry = CLOUDINARY_FOLDER
+        ? [CLOUDINARY_FOLDER, '', 'FracturePoint_Photos', 'FracturePoint Photos', 'fracturepoint_photos']
+        : [''];
+    const seen = new Set();
+    const uniqueFolders = foldersToTry.filter((f) => {
+        const k = f.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+    });
 
     let data;
     let lastError;
+    let usedFolder = '';
 
-    for (const url of urlsToTry) {
+    for (const folder of uniqueFolders) {
+        const query = folder ? '?folder=' + encodeURIComponent(folder) : '';
+        const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+        const url = baseUrl + '/.netlify/functions/cloudinary-list' + query;
         try {
             const response = await fetch(url);
             const text = await response.text();
@@ -363,7 +370,14 @@ async function loadCloudinaryPhotos() {
             if (!response.ok) {
                 throw new Error(data.error || 'Failed to load photos');
             }
-            break;
+
+            const count = (data.resources || []).filter((r) =>
+                ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase())
+            ).length;
+            if (count > 0) {
+                usedFolder = folder;
+                break;
+            }
         } catch (err) {
             lastError = err;
             if (err.message === 'Failed to fetch' || err.message.includes('Invalid response')) continue;
@@ -380,7 +394,10 @@ async function loadCloudinaryPhotos() {
         const images = resources.filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
 
         if (images.length === 0) {
-            container.innerHTML = '<div class="media-placeholder"><p>No photos in this folder. Add CLOUDINARY_FOLDER in script.js or upload images to Cloudinary.</p></div>';
+            container.innerHTML =
+                '<div class="media-placeholder"><p>No photos found. Check CLOUDINARY_FOLDER in script.js matches your Cloudinary folder name exactly (case-sensitive). Folder includes subfolders.</p><p class="media-error">Tried: ' +
+                (CLOUDINARY_FOLDER || 'root') +
+                ', FracturePoint_Photos, FracturePoint Photos, root</p></div>';
             return;
         }
 
