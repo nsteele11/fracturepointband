@@ -24,6 +24,10 @@ Photos are loaded from a Cloudinary folder (including all subfolders). To enable
 2. **Environment variables** – In Netlify Dashboard → Site settings → Environment variables, add: `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`.
 3. **Configure folder** – In `script.js`, set `CLOUDINARY_FOLDER` to your folder path (e.g. `'band-photos'`). Leave empty to show all images from the root.
 
+### YouTube Videos
+
+To show channel videos directly on the site, add `YOUTUBE_API_KEY` to Netlify environment variables. Get a free API key from [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → Create credentials → API key. Enable the YouTube Data API v3 for your project.
+
 ## Future Development
 
 - Connect to a domain URL when available

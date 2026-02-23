@@ -1,0 +1,66 @@
+/**
+ * Netlify function to fetch YouTube channel videos via YouTube Data API v3.
+ * Requires YOUTUBE_API_KEY in Netlify environment (get from Google Cloud Console).
+ */
+
+exports.handler = async (event) => {
+    const headers = {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Content-Type': 'application/json',
+    };
+
+    if (event.httpMethod === 'OPTIONS') {
+        return { statusCode: 204, headers, body: '' };
+    }
+
+    const apiKey = process.env.YOUTUBE_API_KEY;
+    const channelId = event.queryStringParameters?.channelId || '';
+
+    if (!apiKey || !channelId) {
+        return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({
+                error: 'Missing YOUTUBE_API_KEY or channelId. Set YOUTUBE_API_KEY in Netlify env and pass channelId in query.',
+            }),
+        };
+    }
+
+    try {
+        const uploadsRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`
+        );
+        const uploadsData = await uploadsRes.json();
+
+        if (!uploadsData.items || uploadsData.items.length === 0) {
+            return { statusCode: 200, headers, body: JSON.stringify({ videos: [] }) };
+        }
+
+        const playlistId = uploadsData.items[0].contentDetails?.relatedPlaylists?.uploads;
+        if (!playlistId) {
+            return { statusCode: 200, headers, body: JSON.stringify({ videos: [] }) };
+        }
+
+        const playlistRes = await fetch(
+            `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlistId}&maxResults=12&key=${apiKey}`
+        );
+        const playlistData = await playlistRes.json();
+
+        const videos = (playlistData.items || [])
+            .filter((item) => item.snippet?.resourceId?.videoId)
+            .map((item) => ({
+                id: item.snippet.resourceId.videoId,
+                title: item.snippet.title || '',
+            }));
+
+        return { statusCode: 200, headers, body: JSON.stringify({ videos }) };
+    } catch (err) {
+        console.error('YouTube API error:', err);
+        return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({ error: err.message }),
+        };
+    }
+};
