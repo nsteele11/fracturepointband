@@ -2,9 +2,8 @@
   publish = "."
   functions = "functions"
 
-# Rewrite so function works on custom domain (fracturepointband.com)
+# Rewrite /api/* to functions (works on custom domain)
 [[redirects]]
-  from = "/api/cloudinary-list"
-  to = "/.netlify/functions/cloudinary-list"
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
-  force = true

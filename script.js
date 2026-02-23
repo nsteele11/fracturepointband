@@ -5,8 +5,8 @@ const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${GOOGLE_SHEE
 // Cloudinary configuration - photos load from folder (including subfolders) via Netlify function
 const CLOUDINARY_CLOUD_NAME = 'dhvetz6qg';
 const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty = root folder
-// Leave empty to use current page origin (avoids CORS). Set if needed for local dev: 'https://fracturepointband.netlify.app'
-const NETLIFY_SITE_URL = '';
+// Fallback if custom domain doesn't route /api/ - set your Netlify URL
+const NETLIFY_SITE_URL = 'https://fracturepointband.netlify.app';
 
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
@@ -337,26 +337,41 @@ async function loadCloudinaryPhotos() {
 
     container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
 
-    try {
-        const baseUrl = NETLIFY_SITE_URL || window.location.origin;
-        const functionPath = '/api/cloudinary-list';
-        const query = CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : '';
-        const url = baseUrl + functionPath + query;
-        const response = await fetch(url);
-        const text = await response.text();
+    const query = CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : '';
+    const urlsToTry = [
+        window.location.origin + '/api/cloudinary-list' + query,
+        (NETLIFY_SITE_URL || 'https://fracturepointband.netlify.app') + '/.netlify/functions/cloudinary-list' + query,
+    ];
 
-        let data;
+    let data;
+    let lastError;
+
+    for (const url of urlsToTry) {
         try {
-            data = JSON.parse(text);
-        } catch (e) {
-            if (text.trim().startsWith('<')) {
-                throw new Error('Function not found. Connect your Git repo to Netlify (drag-and-drop does not deploy functions).');
-            }
-            throw new Error('Invalid response from server');
-        }
+            const response = await fetch(url);
+            const text = await response.text();
 
-        if (!response.ok) {
-            throw new Error(data.error || 'Failed to load photos');
+            try {
+                data = JSON.parse(text);
+            } catch (e) {
+                if (text.trim().startsWith('<')) continue;
+                throw new Error('Invalid response from server');
+            }
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to load photos');
+            }
+            break;
+        } catch (err) {
+            lastError = err;
+            if (err.message === 'Failed to fetch' || err.message.includes('Invalid response')) continue;
+            throw err;
+        }
+    }
+
+    try {
+        if (!data || !data.resources) {
+            throw lastError || new Error('Could not load photos from server');
         }
 
         const resources = data.resources || [];
