@@ -339,7 +339,17 @@ async function loadCloudinaryPhotos() {
     try {
         const url = `${CLOUDINARY_LIST_URL}${CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : ''}`;
         const response = await fetch(url);
-        const data = await response.json();
+        const text = await response.text();
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            if (text.trim().startsWith('<')) {
+                throw new Error('Function not found. Connect your Git repo to Netlify (drag-and-drop does not deploy functions).');
+            }
+            throw new Error('Invalid response from server');
+        }
 
         if (!response.ok) {
             throw new Error(data.error || 'Failed to load photos');
@@ -366,7 +376,7 @@ async function loadCloudinaryPhotos() {
             .join('');
     } catch (err) {
         console.error('Cloudinary photos error:', err);
-        container.innerHTML = `<div class="media-placeholder"><p>Could not load photos. Deploy to Netlify and set CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in environment variables.</p><p class="media-error">${err.message}</p></div>`;
+        container.innerHTML = `<div class="media-placeholder"><p>Could not load photos.</p><p class="media-error">${err.message}</p><p class="media-error" style="margin-top:1rem;font-size:0.9rem">Tip: Netlify functions require Git deploy (not drag-and-drop). Use CLOUDINARY_URL or set CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET in Netlify env vars.</p></div>`;
     }
 }
 

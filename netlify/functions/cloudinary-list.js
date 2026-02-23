@@ -14,16 +14,31 @@ exports.handler = async (event) => {
         return { statusCode: 204, headers, body: '' };
     }
 
-    const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.CLOUDINARY_API_KEY;
-    const apiSecret = process.env.CLOUDINARY_API_SECRET;
+    // Support both CLOUDINARY_URL and separate vars
+    let cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+    let apiKey = process.env.CLOUDINARY_API_KEY;
+    let apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+    const cloudinaryUrl = process.env.CLOUDINARY_URL;
+    if (cloudinaryUrl && cloudinaryUrl.startsWith('cloudinary://')) {
+        try {
+            const match = cloudinaryUrl.match(/cloudinary:\/\/([^:]+):([^@]+)@(.+)/);
+            if (match) {
+                apiKey = match[1];
+                apiSecret = match[2];
+                cloudName = match[3].replace(/\/$/, '');
+            }
+        } catch (e) {
+            console.error('Failed to parse CLOUDINARY_URL:', e);
+        }
+    }
 
     if (!cloudName || !apiKey || !apiSecret) {
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({
-                error: 'Cloudinary credentials not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in Netlify environment.',
+                error: 'Cloudinary credentials not configured. Set CLOUDINARY_URL or CLOUDINARY_CLOUD_NAME + CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET in Netlify environment variables.',
             }),
         };
     }
