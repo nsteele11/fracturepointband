@@ -2,6 +2,11 @@
 const GOOGLE_SHEET_ID = '2PACX-1vSIwspp_P8-nqaWd2HM6u0Dkh7_XcO_Hrc6E4-QDqFDUABZQpUvQ1NdzJEkTFazripJxfTT7D3w6yuX';
 const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${GOOGLE_SHEET_ID}/pub?output=csv`;
 
+// Cloudinary configuration - photos load from folder (including subfolders) via Netlify function
+const CLOUDINARY_CLOUD_NAME = 'dhvetz6qg';
+const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' or 'fracturepoint' - empty = root folder
+const CLOUDINARY_LIST_URL = '/.netlify/functions/cloudinary-list'; // Netlify function endpoint
+
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
     try {
@@ -312,6 +317,59 @@ function renderShows(upcomingShows, pastShows) {
     }
 }
 
+// Cloudinary photo URL helper - builds optimized image URL
+function getCloudinaryUrl(publicId, width = 400, height = 400) {
+    if (!CLOUDINARY_CLOUD_NAME || !publicId) return null;
+    const transform = `w_${width},h_${height},c_fill`;
+    return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${transform}/${publicId}`;
+}
+
+// Load and render Cloudinary photos from folder (includes all subfolders)
+async function loadCloudinaryPhotos() {
+    const container = document.getElementById('photos-section');
+    if (!container) return;
+
+    if (!CLOUDINARY_CLOUD_NAME) {
+        container.innerHTML = '<div class="media-placeholder"><p>Set CLOUDINARY_CLOUD_NAME in script.js.</p></div>';
+        return;
+    }
+
+    container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
+
+    try {
+        const url = `${CLOUDINARY_LIST_URL}${CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : ''}`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Failed to load photos');
+        }
+
+        const resources = data.resources || [];
+        const images = resources.filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
+
+        if (images.length === 0) {
+            container.innerHTML = '<div class="media-placeholder"><p>No photos in this folder. Add CLOUDINARY_FOLDER in script.js or upload images to Cloudinary.</p></div>';
+            return;
+        }
+
+        container.innerHTML = images
+            .map(({ public_id }) => {
+                const thumbUrl = getCloudinaryUrl(public_id, 300, 300);
+                const fullUrl = getCloudinaryUrl(public_id, 1200, 1200);
+                if (!thumbUrl) return '';
+                return `<a href="${fullUrl}" target="_blank" rel="noopener" class="media-photo-item" title="View full size">
+                    <img src="${thumbUrl}" alt="Band photo" loading="lazy">
+                </a>`;
+            })
+            .filter(Boolean)
+            .join('');
+    } catch (err) {
+        console.error('Cloudinary photos error:', err);
+        container.innerHTML = `<div class="media-placeholder"><p>Could not load photos. Deploy to Netlify and set CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET in environment variables.</p><p class="media-error">${err.message}</p></div>`;
+    }
+}
+
 // Navigation functionality
 document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-link');
@@ -350,5 +408,8 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchShowsData().then(({ upcomingShows, pastShows }) => {
         renderShows(upcomingShows, pastShows);
     });
+
+    // Load Cloudinary photos
+    loadCloudinaryPhotos();
 });
 
