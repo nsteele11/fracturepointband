@@ -403,6 +403,17 @@ body::before {
     height: 100%;
 }
 
+.youtube-channel-card {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-light);
+}
+
+.youtube-channel-card p {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+
 .youtube-link-wrap {
     text-align: center;
     margin-top: 1rem;
