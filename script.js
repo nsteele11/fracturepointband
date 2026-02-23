@@ -338,7 +338,10 @@ async function loadCloudinaryPhotos() {
     container.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
 
     try {
-        const url = `${CLOUDINARY_LIST_URL}${CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : ''}`;
+        const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+        const functionPath = '/.netlify/functions/cloudinary-list';
+        const query = CLOUDINARY_FOLDER ? '?folder=' + encodeURIComponent(CLOUDINARY_FOLDER) : '';
+        const url = baseUrl + functionPath + query;
         const response = await fetch(url);
         const text = await response.text();
 
