@@ -8,6 +8,9 @@ const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty 
 // Netlify URL - required when site is on different host (e.g. fracturepointband.com)
 const NETLIFY_SITE_URL = 'https://funny-cendol-31d47d.netlify.app';
 
+// YouTube - channel URL (e.g. https://www.youtube.com/@FracturePointBand) or channel ID (UC...)
+const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/channel/UCam1SbBcBmBG7Siruznfdhw';
+
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
     try {
@@ -325,6 +328,44 @@ function getCloudinaryUrl(publicId, width = 400, height = 400) {
     return `https://res.cloudinary.com/${CLOUDINARY_CLOUD_NAME}/image/upload/${transform}/${publicId}`;
 }
 
+// Load YouTube video section
+function loadYouTubeVideo() {
+    const container = document.getElementById('video-section');
+    if (!container || !YOUTUBE_CHANNEL_URL) {
+        if (container && !YOUTUBE_CHANNEL_URL) {
+            container.innerHTML = '<div class="media-placeholder"><p>Add your YouTube channel URL to YOUTUBE_CHANNEL_URL in script.js</p></div>';
+        }
+        return;
+    }
+
+    const url = YOUTUBE_CHANNEL_URL.trim();
+    let embedHtml = '';
+    let linkUrl = url;
+
+    if (url.includes('youtube.com/watch') || url.includes('youtu.be/')) {
+        const videoMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})(?:\?|&|$)/) || url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+        if (videoMatch) {
+            embedHtml = '<div class="video-embed-wrapper"><iframe src="https://www.youtube.com/embed/' + videoMatch[1] + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+        }
+    } else if (url.includes('list=')) {
+        const listMatch = url.match(/list=([a-zA-Z0-9_-]+)/);
+        if (listMatch) {
+            embedHtml = '<div class="video-embed-wrapper"><iframe src="https://www.youtube.com/embed/videoseries?list=' + listMatch[1] + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+        }
+    } else if (url.includes('/channel/UC') || url.includes('/@')) {
+        const channelMatch = url.match(/\/channel\/(UC[a-zA-Z0-9_-]+)/);
+        if (channelMatch) {
+            const uploadsId = 'UU' + channelMatch[1].slice(2);
+            embedHtml = '<div class="video-embed-wrapper"><iframe src="https://www.youtube.com/embed/videoseries?list=' + uploadsId + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';
+        } else if (url.includes('/@')) {
+            embedHtml = '<div class="media-placeholder"><p>Visit our YouTube channel for videos</p></div>';
+        }
+    }
+
+    const linkHtml = '<a href="' + linkUrl + '" target="_blank" rel="noopener" class="youtube-link">Watch on YouTube</a>';
+    container.innerHTML = (embedHtml || '<div class="media-placeholder"><p>YouTube channel connected</p></div>') + '<div class="youtube-link-wrap">' + linkHtml + '</div>';
+}
+
 // Load and render Cloudinary photos from folder (includes all subfolders)
 async function loadCloudinaryPhotos() {
     const container = document.getElementById('photos-section');
@@ -459,5 +500,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load Cloudinary photos
     loadCloudinaryPhotos();
+
+    // Load YouTube video
+    loadYouTubeVideo();
 });
 
