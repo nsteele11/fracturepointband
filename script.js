@@ -5,8 +5,8 @@ const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${GOOGLE_SHEE
 // Cloudinary configuration - photos load from folder (including subfolders) via Netlify function
 const CLOUDINARY_CLOUD_NAME = 'dhvetz6qg';
 const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty = root folder
-// Netlify URL for function - use when custom domain (fracturepointband.com) doesn't route /.netlify/functions
-const NETLIFY_SITE_URL = 'https://fracturepointband.netlify.app';
+// Leave empty to use current page origin (avoids CORS). Set if needed for local dev: 'https://fracturepointband.netlify.app'
+const NETLIFY_SITE_URL = '';
 
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
