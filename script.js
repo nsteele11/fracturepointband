@@ -375,15 +375,16 @@ function openLightbox(items, index, isVideo) {
     const idxEl = document.getElementById('lightbox-index');
     const totalEl = document.getElementById('lightbox-total');
 
+    const videoWrap = document.getElementById('lightbox-video-wrap');
     function show() {
         const item = lightboxItems[lightboxIndex];
         if (!item) return;
         if (isVideo) {
             img.style.display = 'none';
-            vid.style.display = 'block';
-            vid.src = 'https://www.youtube.com/embed/' + item.id + '?autoplay=1';
+            videoWrap.style.display = 'block';
+            vid.src = 'https://www.youtube.com/embed/' + item.id + '?autoplay=1&rel=0&modestbranding=1';
         } else {
-            vid.style.display = 'none';
+            videoWrap.style.display = 'none';
             vid.src = '';
             img.style.display = 'block';
             img.src = getCloudinaryUrl(item.public_id, 1920, 1920);

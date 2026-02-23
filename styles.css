@@ -573,12 +573,28 @@ body::before {
 .lightbox-content {
     max-width: 90vw;
     max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.lightbox-content img,
-.lightbox-content iframe {
+.lightbox-content img {
     max-width: 90vw;
     max-height: 85vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.lightbox-video-wrap {
+    width: min(90vw, calc(85vh * 16 / 9));
+    aspect-ratio: 16 / 9;
+}
+
+.lightbox-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
 }
 
 .lightbox-counter {
