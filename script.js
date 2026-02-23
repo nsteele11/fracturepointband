@@ -415,13 +415,52 @@ function initMediaGallery() {
     let currentMedia = 'video';
     let currentCategory = 'live-shows';
     const cache = { video: {}, photos: {} };
+    const categories = Object.keys(CLOUDINARY_CATEGORIES);
+
+    function updateSubtabStates() {
+        const media = currentMedia;
+        subtabs.forEach((tab) => {
+            const cat = tab.dataset.category;
+            const items = (cache[media] && cache[media][cat]) || [];
+            if (items.length === 0) {
+                tab.classList.add('disabled');
+                tab.setAttribute('aria-disabled', 'true');
+            } else {
+                tab.classList.remove('disabled');
+                tab.removeAttribute('aria-disabled');
+            }
+        });
+        const currentItems = (cache[media] && cache[media][currentCategory]) || [];
+        if (currentItems.length === 0) {
+            const firstWithContent = categories.find((c) => (cache[media] && cache[media][c] || []).length > 0);
+            if (firstWithContent) {
+                currentCategory = firstWithContent;
+                subtabs.forEach((t) => t.classList.remove('active'));
+                const activeTab = document.querySelector('.subtab[data-category="' + firstWithContent + '"]');
+                if (activeTab) activeTab.classList.add('active');
+                switchContent();
+            }
+        }
+    }
+
+    async function preloadCategoryContent() {
+        const videoPromises = categories.map((c) => fetchYouTubeVideos(c).then((v) => (cache.video[c] = v)));
+        const photoPromises = categories.map((c) => fetchCloudinaryPhotos(c).then((p) => (cache.photos[c] = p)));
+        await Promise.all([...videoPromises, ...photoPromises]);
+        updateSubtabStates();
+    }
 
     async function loadVideos() {
         videoMasonry.innerHTML = '<div class="media-placeholder media-loading" style="grid-column:1/-1"><p>Loading videos...</p></div>';
-        let videos = [];
-        try {
-            if (YOUTUBE_CHANNEL_ID) videos = await fetchYouTubeVideos(currentCategory);
-        } catch (e) {}
+        let videos = cache.video[currentCategory];
+        if (videos === undefined) {
+            try {
+                if (YOUTUBE_CHANNEL_ID) videos = await fetchYouTubeVideos(currentCategory);
+            } catch (e) {}
+            cache.video[currentCategory] = videos || [];
+            videos = cache.video[currentCategory];
+        }
+        updateSubtabStates();
         if (videos.length === 0) {
             videoMasonry.innerHTML = '<div class="media-placeholder"><p>No videos in this category.</p></div>';
             youtubeLink.style.display = 'inline-block';
@@ -449,10 +488,15 @@ function initMediaGallery() {
 
     async function loadPhotos() {
         photosMasonry.innerHTML = '<div class="media-placeholder media-loading"><p>Loading photos...</p></div>';
-        let images = [];
-        try {
-            if (CLOUDINARY_CLOUD_NAME) images = await fetchCloudinaryPhotos(currentCategory);
-        } catch (e) {}
+        let images = cache.photos[currentCategory];
+        if (images === undefined) {
+            try {
+                if (CLOUDINARY_CLOUD_NAME) images = await fetchCloudinaryPhotos(currentCategory);
+            } catch (e) {}
+            cache.photos[currentCategory] = images || [];
+            images = cache.photos[currentCategory];
+        }
+        updateSubtabStates();
         if (images.length === 0) {
             photosMasonry.innerHTML = '<div class="media-placeholder"><p>No photos in this category.</p></div>';
             return;
@@ -489,12 +533,14 @@ function initMediaGallery() {
             mediaTabs.forEach((t) => t.classList.remove('active'));
             tab.classList.add('active');
             currentMedia = tab.dataset.media;
+            updateSubtabStates();
             switchContent();
         });
     });
 
     subtabs.forEach((tab) => {
         tab.addEventListener('click', () => {
+            if (tab.classList.contains('disabled')) return;
             subtabs.forEach((t) => t.classList.remove('active'));
             tab.classList.add('active');
             currentCategory = tab.dataset.category;
@@ -535,7 +581,7 @@ function initMediaGallery() {
         }
     });
 
-    switchContent();
+    preloadCategoryContent().then(() => switchContent());
 }
 
 // Navigation functionality

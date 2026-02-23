@@ -414,6 +414,12 @@ body::before {
     color: var(--pewter-gold);
 }
 
+.subtab.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .media-content-area {
     position: relative;
     min-height: 300px;
@@ -522,11 +528,16 @@ body::before {
 .lightbox {
     display: none;
     position: fixed;
-    inset: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     z-index: 10000;
     background: rgba(0, 0, 0, 0.95);
     align-items: center;
     justify-content: center;
+    -webkit-align-items: center;
+    -webkit-justify-content: center;
 }
 
 .lightbox[aria-hidden="false"] {
@@ -592,9 +603,30 @@ body::before {
     object-fit: contain;
 }
 
+/* Video wrap: Safari-compatible sizing (padding fallback for pre-15, aspect-ratio for modern) */
 .lightbox-video-wrap {
-    width: min(90vw, calc(85vh * 16 / 9));
-    aspect-ratio: 16 / 9;
+    position: relative;
+    width: 90vw;
+    max-width: 1200px;
+}
+
+@supports (aspect-ratio: 16 / 9) {
+    .lightbox-video-wrap {
+        width: min(90vw, calc(85vh * 16 / 9));
+        aspect-ratio: 16 / 9;
+    }
+}
+
+@supports not (aspect-ratio: 16 / 9) {
+    .lightbox-video-wrap {
+        padding-bottom: 56.25%; /* 9/16 for 16:9 */
+        height: 0;
+    }
+    .lightbox-video-wrap iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
 }
 
 .lightbox-content iframe {
