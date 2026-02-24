@@ -103,22 +103,22 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Lightbox -->
-            <div id="lightbox" class="lightbox" aria-hidden="true">
-                <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
-                <button type="button" class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
-                <button type="button" class="lightbox-next" aria-label="Next">&rsaquo;</button>
-                <div class="lightbox-content">
-                    <img id="lightbox-img" src="" alt="">
-                    <div id="lightbox-video-wrap" class="lightbox-video-wrap" style="display:none">
-                        <iframe id="lightbox-video" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="eager"></iframe>
-                    </div>
-                </div>
-                <div class="lightbox-counter"><span id="lightbox-index">1</span> / <span id="lightbox-total">1</span></div>
-            </div>
         </section>
     </main>
+
+    <!-- Lightbox: outside main/section so fixed positioning works in Safari -->
+    <div id="lightbox" class="lightbox" aria-hidden="true">
+        <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
+        <button type="button" class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
+        <button type="button" class="lightbox-next" aria-label="Next">&rsaquo;</button>
+        <div class="lightbox-content">
+            <img id="lightbox-img" src="" alt="">
+            <div id="lightbox-video-wrap" class="lightbox-video-wrap" style="display:none">
+                <iframe id="lightbox-video" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="eager"></iframe>
+            </div>
+        </div>
+        <div class="lightbox-counter"><span id="lightbox-index">1</span> / <span id="lightbox-total">1</span></div>
+    </div>
 
     <script src="script.js"></script>
 </body>

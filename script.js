@@ -394,6 +394,7 @@ function openLightbox(items, index, isVideo) {
         idxEl.textContent = lightboxIndex + 1;
         totalEl.textContent = lightboxItems.length;
         lb.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
     }
     show();
     lb._show = show;
@@ -403,6 +404,7 @@ function closeLightbox() {
     const lb = document.getElementById('lightbox');
     document.getElementById('lightbox-video').src = '';
     lb.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
 }
 
 function initMediaGallery() {
