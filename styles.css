@@ -86,6 +86,8 @@ body::before {
 }
 
 .nav-link {
+    -webkit-appearance: none;
+    appearance: none;
     color: var(--pewter-gold);
     text-decoration: none;
     font-size: 1.1rem;
@@ -95,9 +97,12 @@ body::before {
     border-radius: 4px;
     transition: all 0.3s ease;
     background-color: transparent;
+    background-image: none;
     display: inline-block;
     text-transform: uppercase;
     letter-spacing: 1px;
+    -webkit-tap-highlight-color: transparent;
+    cursor: pointer;
 }
 
 .nav-link:hover {
@@ -123,20 +128,24 @@ body::before {
 .page-section {
     display: none;
     animation: fadeIn 0.5s ease-in;
+    pointer-events: auto;
 }
 
 .page-section.active {
     display: block;
 }
 
+#photos {
+    position: relative;
+    z-index: 2;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(20px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
@@ -370,8 +379,11 @@ body::before {
 }
 
 .media-tab {
+    -webkit-appearance: none;
+    appearance: none;
     padding: 0.75rem 1.5rem;
-    background: transparent;
+    background-color: transparent;
+    background-image: none;
     border: 2px solid var(--pewter-gold);
     color: var(--pewter-gold);
     font-size: 1rem;
@@ -381,6 +393,7 @@ body::before {
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .media-tab:hover {
@@ -400,14 +413,18 @@ body::before {
 }
 
 .subtab {
+    -webkit-appearance: none;
+    appearance: none;
     padding: 0.5rem 1rem;
-    background: transparent;
+    background-color: transparent;
+    background-image: none;
     border: 1px solid rgba(184, 160, 130, 0.5);
     color: var(--text-light);
     font-size: 0.9rem;
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .subtab:hover {
@@ -437,6 +454,12 @@ body::before {
 .media-content-area {
     position: relative;
     min-height: 300px;
+    pointer-events: auto;
+}
+
+.media-tabs,
+.media-subtabs {
+    pointer-events: auto;
 }
 
 .media-panel {
@@ -469,6 +492,8 @@ body::before {
     overflow: hidden;
     border: 2px solid rgba(184, 160, 130, 0.3);
     transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 .masonry-item:hover {
@@ -577,10 +602,13 @@ body::before {
 }
 
 .lightbox-close {
+    -webkit-appearance: none;
+    appearance: none;
     position: absolute;
     top: 1rem;
     right: 1rem;
     background: rgba(0, 0, 0, 0.5);
+    background-image: none;
     border: none;
     color: var(--pewter-gold);
     font-size: 2.5rem;
@@ -592,11 +620,14 @@ body::before {
 
 .lightbox-prev,
 .lightbox-next {
+    -webkit-appearance: none;
+    appearance: none;
     position: absolute;
     top: 50%;
     -webkit-transform: translateY(-50%);
     transform: translateY(-50%);
     background: rgba(0, 0, 0, 0.5);
+    background-image: none;
     border: 2px solid var(--pewter-gold);
     color: var(--pewter-gold);
     font-size: 2rem;

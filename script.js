@@ -589,7 +589,10 @@ function initMediaGallery() {
         }
     });
 
-    preloadCategoryContent().then(() => switchContent());
+    preloadCategoryContent().then(() => switchContent()).catch(() => {
+        updateSubtabStates();
+        switchContent();
+    });
 }
 
 // Navigation functionality
