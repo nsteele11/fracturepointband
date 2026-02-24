@@ -82,15 +82,15 @@
             <div class="content-wrapper">
                 <h2 class="section-title">Photos / Video</h2>
 
-                <div class="media-tabs">
-                    <button type="button" class="media-tab active" data-media="video">Video</button>
-                    <button type="button" class="media-tab" data-media="photos">Photos</button>
+                <div class="media-tabs" role="tablist">
+                    <div class="media-tab active" role="tab" tabindex="0" data-media="video">Video</div>
+                    <div class="media-tab" role="tab" tabindex="0" data-media="photos">Photos</div>
                 </div>
 
-                <div class="media-subtabs">
-                    <button type="button" class="subtab active" data-category="live-shows">Live Shows</button>
-                    <button type="button" class="subtab" data-category="the-band">The Band</button>
-                    <button type="button" class="subtab" data-category="behind-the-scenes">Behind the Scenes</button>
+                <div class="media-subtabs" role="tablist">
+                    <div class="subtab active" role="tab" tabindex="0" data-category="live-shows">Live Shows</div>
+                    <div class="subtab" role="tab" tabindex="0" data-category="the-band">The Band</div>
+                    <div class="subtab" role="tab" tabindex="0" data-category="behind-the-scenes">Behind the Scenes</div>
                 </div>
 
                 <div class="media-content-area">
@@ -108,9 +108,9 @@
 
     <!-- Lightbox: outside main/section so fixed positioning works in Safari -->
     <div id="lightbox" class="lightbox" aria-hidden="true">
-        <button type="button" class="lightbox-close" aria-label="Close">&times;</button>
-        <button type="button" class="lightbox-prev" aria-label="Previous">&lsaquo;</button>
-        <button type="button" class="lightbox-next" aria-label="Next">&rsaquo;</button>
+        <div class="lightbox-close" role="button" tabindex="0" aria-label="Close">&times;</div>
+        <div class="lightbox-prev" role="button" tabindex="0" aria-label="Previous">&lsaquo;</div>
+        <div class="lightbox-next" role="button" tabindex="0" aria-label="Next">&rsaquo;</div>
         <div class="lightbox-content">
             <img id="lightbox-img" src="" alt="">
             <div id="lightbox-video-wrap" class="lightbox-video-wrap" style="display:none">

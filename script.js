@@ -18,6 +18,20 @@ const CLOUDINARY_CATEGORIES = { 'live-shows': 'Live Shows', 'the-band': 'The Ban
 // Categories to always show as grayed out / disabled until photos/videos are added - remove from array when ready
 const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 
+// Polyfill Element.prototype.closest for older Safari
+if (!Element.prototype.closest) {
+    Element.prototype.closest = function(s) {
+        var el = this;
+        var matches = el.matches || el.webkitMatchesSelector || el.msMatchesSelector;
+        if (!matches) return null;
+        do {
+            if (matches.call(el, s)) return el;
+            el = el.parentElement;
+        } while (el);
+        return null;
+    };
+}
+
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
     try {
@@ -340,32 +354,41 @@ let lightboxItems = [];
 let lightboxIndex = 0;
 let touchStartX = 0;
 
-async function fetchYouTubeVideos(category) {
-    const playlistId = YOUTUBE_PLAYLISTS[category];
-    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
-    let apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
+function fetchYouTubeVideos(category) {
+    var playlistId = YOUTUBE_PLAYLISTS[category];
+    var baseUrl = NETLIFY_SITE_URL || (typeof window !== 'undefined' && window.location && window.location.origin) || '';
+    var apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
     if (playlistId) apiUrl = baseUrl + '/.netlify/functions/youtube-videos?playlistId=' + encodeURIComponent(playlistId);
-    const res = await fetch(apiUrl);
-    const data = await res.json();
-    return data.videos || [];
+    return fetch(apiUrl, { mode: 'cors', cache: 'no-store' })
+        .then(function(res) { return res.json(); })
+        .then(function(data) { return data && data.videos ? data.videos : []; })
+        .catch(function() { return []; });
 }
 
-async function fetchCloudinaryPhotos(category) {
-    const subfolder = CLOUDINARY_CATEGORIES[category] || '';
-    const folder = CLOUDINARY_FOLDER ? (subfolder ? CLOUDINARY_FOLDER + '/' + subfolder : CLOUDINARY_FOLDER) : subfolder;
-    const foldersToTry = folder ? [folder, CLOUDINARY_FOLDER, ''] : [''];
-    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+function fetchCloudinaryPhotos(category) {
+    var subfolder = CLOUDINARY_CATEGORIES[category] || '';
+    var folder = CLOUDINARY_FOLDER ? (subfolder ? CLOUDINARY_FOLDER + '/' + subfolder : CLOUDINARY_FOLDER) : subfolder;
+    var foldersToTry = folder ? [folder, CLOUDINARY_FOLDER, ''] : [''];
+    var baseUrl = NETLIFY_SITE_URL || (typeof window !== 'undefined' && window.location && window.location.origin) || '';
+    var formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
-    for (const f of foldersToTry) {
-        const url = baseUrl + '/.netlify/functions/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            const resources = (data.resources || []).filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
-            if (resources.length > 0) return resources.map((r) => ({ public_id: r.public_id }));
-        } catch (e) {}
+    function tryFolder(i) {
+        if (i >= foldersToTry.length) return Promise.resolve([]);
+        var f = foldersToTry[i];
+        var url = baseUrl + '/.netlify/functions/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
+        return fetch(url, { mode: 'cors', cache: 'no-store' })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                var resources = (data && data.resources ? data.resources : []).filter(function(r) {
+                    var fmt = (r && r.format ? r.format : '').toLowerCase();
+                    return formats.indexOf(fmt) !== -1;
+                });
+                if (resources.length > 0) return resources.map(function(r) { return { public_id: r.public_id }; });
+                return tryFolder(i + 1);
+            })
+            .catch(function() { return tryFolder(i + 1); });
     }
-    return [];
+    return tryFolder(0);
 }
 
 function openLightbox(items, index, isVideo) {
@@ -452,9 +475,25 @@ function initMediaGallery() {
     }
 
     async function preloadCategoryContent() {
-        const videoPromises = categories.map((c) => fetchYouTubeVideos(c).then((v) => (cache.video[c] = v)));
-        const photoPromises = categories.map((c) => fetchCloudinaryPhotos(c).then((p) => (cache.photos[c] = p)));
-        await Promise.all([...videoPromises, ...photoPromises]);
+        const videoPromises = categories.map(function(c) {
+            return fetchYouTubeVideos(c).then(function(v) {
+                cache.video[c] = v;
+                return v;
+            }).catch(function() {
+                cache.video[c] = [];
+                return [];
+            });
+        });
+        const photoPromises = categories.map(function(c) {
+            return fetchCloudinaryPhotos(c).then(function(p) {
+                cache.photos[c] = p;
+                return p;
+            }).catch(function() {
+                cache.photos[c] = [];
+                return [];
+            });
+        });
+        await Promise.all(videoPromises.concat(photoPromises));
         updateSubtabStates();
     }
 
@@ -536,32 +575,62 @@ function initMediaGallery() {
         }
     }
 
-    mediaTabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            mediaTabs.forEach((t) => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentMedia = tab.dataset.media;
-            updateSubtabStates();
-            switchContent();
-        });
-    });
+    function handleMediaTabClick(tab) {
+        if (!tab || !tab.dataset.media) return;
+        mediaTabs.forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        currentMedia = tab.dataset.media;
+        updateSubtabStates();
+        switchContent();
+    }
 
-    subtabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            if (tab.classList.contains('disabled')) return;
-            subtabs.forEach((t) => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.category;
-            switchContent();
-        });
-    });
+    function handleSubtabClick(tab) {
+        if (!tab || !tab.dataset.category || tab.classList.contains('disabled')) return;
+        subtabs.forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        currentCategory = tab.dataset.category;
+        switchContent();
+    }
 
-    document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
-    document.querySelector('.lightbox-prev').addEventListener('click', () => {
+    function handleMasonryClick(el, isVideo) {
+        var idx = parseInt(el.getAttribute('data-index'), 10);
+        var items = isVideo ? (cache.video[currentCategory] || []) : (cache.photos[currentCategory] || []);
+        if (items[idx]) openLightbox(items, idx, isVideo);
+    }
+
+    var photosSection = document.getElementById('photos');
+    if (photosSection) {
+        photosSection.addEventListener('click', function(e) {
+            var mt = e.target.closest && e.target.closest('.media-tab');
+            var st = e.target.closest && e.target.closest('.subtab');
+            var mi = e.target.closest && e.target.closest('.masonry-item');
+            if (mt) handleMediaTabClick(mt);
+            else if (st) handleSubtabClick(st);
+            else if (mi) handleMasonryClick(mi, mi.getAttribute('data-type') === 'video');
+        });
+        photosSection.addEventListener('touchend', function(e) {
+            var mt = e.target.closest && e.target.closest('.media-tab');
+            var st = e.target.closest && e.target.closest('.subtab');
+            var mi = e.target.closest && e.target.closest('.masonry-item');
+            if (mt) { e.preventDefault(); handleMediaTabClick(mt); }
+            else if (st) { e.preventDefault(); handleSubtabClick(st); }
+            else if (mi) { e.preventDefault(); handleMasonryClick(mi, mi.getAttribute('data-type') === 'video'); }
+        }, { passive: false });
+    }
+
+    function bindLightboxBtn(sel, fn) {
+        var el = document.querySelector(sel);
+        if (el) {
+            el.addEventListener('click', fn);
+            el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); }, { passive: false });
+        }
+    }
+    bindLightboxBtn('.lightbox-close', closeLightbox);
+    bindLightboxBtn('.lightbox-prev', function() {
         lightboxIndex = (lightboxIndex - 1 + lightboxItems.length) % lightboxItems.length;
         document.getElementById('lightbox')._show();
     });
-    document.querySelector('.lightbox-next').addEventListener('click', () => {
+    bindLightboxBtn('.lightbox-next', function() {
         lightboxIndex = (lightboxIndex + 1) % lightboxItems.length;
         document.getElementById('lightbox')._show();
     });
