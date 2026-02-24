@@ -11,6 +11,7 @@ html {
 }
 
 :root {
+    color-scheme: dark;
     --bg-black: #000000;
     --pewter-gold: #B8A082;
     --pewter-gold-hover: #D4C4A8;
@@ -380,7 +381,12 @@ body::before {
 
 .media-tab {
     padding: 0.75rem 1.5rem;
+    min-height: 44px;
+    min-width: 44px;
+    -webkit-appearance: none;
+    appearance: none;
     background-color: transparent;
+    background-image: none;
     border: 2px solid var(--pewter-gold);
     color: var(--pewter-gold);
     font-size: 1rem;
@@ -400,7 +406,8 @@ body::before {
 }
 
 .media-tab.active {
-    background: var(--pewter-gold);
+    background-color: var(--pewter-gold);
+    background-image: none;
     color: var(--bg-black);
 }
 
@@ -413,7 +420,11 @@ body::before {
 
 .subtab {
     padding: 0.5rem 1rem;
+    min-height: 44px;
+    -webkit-appearance: none;
+    appearance: none;
     background-color: transparent;
+    background-image: none;
     border: 1px solid rgba(184, 160, 130, 0.5);
     color: var(--text-light);
     font-size: 0.9rem;
@@ -432,7 +443,8 @@ body::before {
 
 .subtab.active {
     border-color: var(--pewter-gold);
-    background: rgba(184, 160, 130, 0.15);
+    background-color: rgba(184, 160, 130, 0.15);
+    background-image: none;
     color: var(--pewter-gold);
 }
 
@@ -458,6 +470,11 @@ body::before {
 .media-tabs,
 .media-subtabs {
     pointer-events: auto;
+}
+
+.media-tab,
+.subtab {
+    touch-action: manipulation;
 }
 
 .media-panel {
@@ -600,6 +617,10 @@ body::before {
 }
 
 .lightbox-close {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 44px;
+    min-height: 44px;
     position: absolute;
     top: 1rem;
     right: 1rem;
@@ -615,6 +636,10 @@ body::before {
 
 .lightbox-prev,
 .lightbox-next {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 44px;
+    min-height: 44px;
     position: absolute;
     top: 50%;
     -webkit-transform: translateY(-50%);

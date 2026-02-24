@@ -18,20 +18,6 @@ const CLOUDINARY_CATEGORIES = { 'live-shows': 'Live Shows', 'the-band': 'The Ban
 // Categories to always show as grayed out / disabled until photos/videos are added - remove from array when ready
 const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 
-// Polyfill Element.prototype.closest for older Safari
-if (!Element.prototype.closest) {
-    Element.prototype.closest = function(s) {
-        var el = this;
-        var matches = el.matches || el.webkitMatchesSelector || el.msMatchesSelector;
-        if (!matches) return null;
-        do {
-            if (matches.call(el, s)) return el;
-            el = el.parentElement;
-        } while (el);
-        return null;
-    };
-}
-
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
     try {
@@ -354,41 +340,35 @@ let lightboxItems = [];
 let lightboxIndex = 0;
 let touchStartX = 0;
 
-function fetchYouTubeVideos(category) {
-    var playlistId = YOUTUBE_PLAYLISTS[category];
-    var baseUrl = NETLIFY_SITE_URL || (typeof window !== 'undefined' && window.location && window.location.origin) || '';
-    var apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
+async function fetchYouTubeVideos(category) {
+    const playlistId = YOUTUBE_PLAYLISTS[category];
+    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+    let apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
     if (playlistId) apiUrl = baseUrl + '/.netlify/functions/youtube-videos?playlistId=' + encodeURIComponent(playlistId);
-    return fetch(apiUrl, { mode: 'cors', cache: 'no-store' })
-        .then(function(res) { return res.json(); })
-        .then(function(data) { return data && data.videos ? data.videos : []; })
-        .catch(function() { return []; });
+    try {
+        const res = await fetch(apiUrl, { mode: 'cors' });
+        const data = await res.json();
+        return data && data.videos ? data.videos : [];
+    } catch (e) {
+        return [];
+    }
 }
 
-function fetchCloudinaryPhotos(category) {
-    var subfolder = CLOUDINARY_CATEGORIES[category] || '';
-    var folder = CLOUDINARY_FOLDER ? (subfolder ? CLOUDINARY_FOLDER + '/' + subfolder : CLOUDINARY_FOLDER) : subfolder;
-    var foldersToTry = folder ? [folder, CLOUDINARY_FOLDER, ''] : [''];
-    var baseUrl = NETLIFY_SITE_URL || (typeof window !== 'undefined' && window.location && window.location.origin) || '';
-    var formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-    function tryFolder(i) {
-        if (i >= foldersToTry.length) return Promise.resolve([]);
-        var f = foldersToTry[i];
-        var url = baseUrl + '/.netlify/functions/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
-        return fetch(url, { mode: 'cors', cache: 'no-store' })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                var resources = (data && data.resources ? data.resources : []).filter(function(r) {
-                    var fmt = (r && r.format ? r.format : '').toLowerCase();
-                    return formats.indexOf(fmt) !== -1;
-                });
-                if (resources.length > 0) return resources.map(function(r) { return { public_id: r.public_id }; });
-                return tryFolder(i + 1);
-            })
-            .catch(function() { return tryFolder(i + 1); });
+async function fetchCloudinaryPhotos(category) {
+    const subfolder = CLOUDINARY_CATEGORIES[category] || '';
+    const folder = CLOUDINARY_FOLDER ? (subfolder ? CLOUDINARY_FOLDER + '/' + subfolder : CLOUDINARY_FOLDER) : subfolder;
+    const foldersToTry = folder ? [folder, CLOUDINARY_FOLDER, ''] : [''];
+    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+    for (const f of foldersToTry) {
+        try {
+            const url = baseUrl + '/.netlify/functions/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
+            const res = await fetch(url, { mode: 'cors' });
+            const data = await res.json();
+            const resources = (data.resources || []).filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
+            if (resources.length > 0) return resources.map((r) => ({ public_id: r.public_id }));
+        } catch (e) {}
     }
-    return tryFolder(0);
+    return [];
 }
 
 function openLightbox(items, index, isVideo) {
@@ -575,62 +555,40 @@ function initMediaGallery() {
         }
     }
 
-    function handleMediaTabClick(tab) {
-        if (!tab || !tab.dataset.media) return;
-        mediaTabs.forEach(function(t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        currentMedia = tab.dataset.media;
-        updateSubtabStates();
-        switchContent();
-    }
-
-    function handleSubtabClick(tab) {
-        if (!tab || !tab.dataset.category || tab.classList.contains('disabled')) return;
-        subtabs.forEach(function(t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        currentCategory = tab.dataset.category;
-        switchContent();
-    }
-
-    function handleMasonryClick(el, isVideo) {
-        var idx = parseInt(el.getAttribute('data-index'), 10);
-        var items = isVideo ? (cache.video[currentCategory] || []) : (cache.photos[currentCategory] || []);
-        if (items[idx]) openLightbox(items, idx, isVideo);
-    }
-
-    var photosSection = document.getElementById('photos');
-    if (photosSection) {
-        photosSection.addEventListener('click', function(e) {
-            var mt = e.target.closest && e.target.closest('.media-tab');
-            var st = e.target.closest && e.target.closest('.subtab');
-            var mi = e.target.closest && e.target.closest('.masonry-item');
-            if (mt) handleMediaTabClick(mt);
-            else if (st) handleSubtabClick(st);
-            else if (mi) handleMasonryClick(mi, mi.getAttribute('data-type') === 'video');
+    mediaTabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            mediaTabs.forEach((t) => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentMedia = tab.dataset.media;
+            updateSubtabStates();
+            switchContent();
         });
-        photosSection.addEventListener('touchend', function(e) {
-            var mt = e.target.closest && e.target.closest('.media-tab');
-            var st = e.target.closest && e.target.closest('.subtab');
-            var mi = e.target.closest && e.target.closest('.masonry-item');
-            if (mt) { e.preventDefault(); handleMediaTabClick(mt); }
-            else if (st) { e.preventDefault(); handleSubtabClick(st); }
-            else if (mi) { e.preventDefault(); handleMasonryClick(mi, mi.getAttribute('data-type') === 'video'); }
-        }, { passive: false });
-    }
+    });
 
-    function bindLightboxBtn(sel, fn) {
-        var el = document.querySelector(sel);
+    subtabs.forEach((tab) => {
+        tab.addEventListener('click', () => {
+            if (tab.classList.contains('disabled')) return;
+            subtabs.forEach((t) => t.classList.remove('active'));
+            tab.classList.add('active');
+            currentCategory = tab.dataset.category;
+            switchContent();
+        });
+    });
+
+    // iPhone Safari: empty touch listeners on interactive areas help click events fire reliably
+    [document.querySelector('.media-tabs'), document.querySelector('.media-subtabs'), document.getElementById('video-panel'), document.getElementById('photos-panel')].forEach((el) => {
         if (el) {
-            el.addEventListener('click', fn);
-            el.addEventListener('touchend', function(e) { e.preventDefault(); fn(); }, { passive: false });
+            el.addEventListener('touchstart', () => {}, { passive: true });
+            el.addEventListener('touchend', () => {}, { passive: true });
         }
-    }
-    bindLightboxBtn('.lightbox-close', closeLightbox);
-    bindLightboxBtn('.lightbox-prev', function() {
+    });
+
+    document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+    document.querySelector('.lightbox-prev').addEventListener('click', () => {
         lightboxIndex = (lightboxIndex - 1 + lightboxItems.length) % lightboxItems.length;
         document.getElementById('lightbox')._show();
     });
-    bindLightboxBtn('.lightbox-next', function() {
+    document.querySelector('.lightbox-next').addEventListener('click', () => {
         lightboxIndex = (lightboxIndex + 1) % lightboxItems.length;
         document.getElementById('lightbox')._show();
     });
