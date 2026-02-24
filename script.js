@@ -559,6 +559,23 @@ function initMediaGallery() {
 
     let lastTapTarget = null;
     let lastTapTime = 0;
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoved = false;
+
+    document.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchMoved = false;
+    }, { passive: true });
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches[0]) {
+            const dx = e.touches[0].clientX - touchStartX;
+            const dy = e.touches[0].clientY - touchStartY;
+            if (Math.hypot(dx, dy) > 10) touchMoved = true;
+        }
+    }, { passive: true });
+
     function handleTap(e, target) {
         const mt = target && target.closest && target.closest('.media-tab');
         const st = target && target.closest && target.closest('.subtab');
@@ -609,8 +626,12 @@ function initMediaGallery() {
         handleTap(e, e.target);
     });
     document.addEventListener('touchend', (e) => {
-        const target = e.changedTouches && e.changedTouches[0]
-            ? document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+        if (touchMoved) return;
+        const tx = e.changedTouches && e.changedTouches[0];
+        const moveDist = tx ? Math.hypot(tx.clientX - touchStartX, tx.clientY - touchStartY) : 0;
+        if (moveDist > 10) return;
+        const target = tx
+            ? document.elementFromPoint(tx.clientX, tx.clientY)
             : e.target;
         if (target) handleTap(e, target);
     }, { passive: false });
