@@ -380,13 +380,12 @@ body::before {
 }
 
 .media-tab {
+    display: inline-block;
+    text-decoration: none;
     padding: 0.75rem 1.5rem;
     min-height: 44px;
     min-width: 44px;
-    -webkit-appearance: none;
-    appearance: none;
     background-color: transparent;
-    background-image: none;
     border: 2px solid var(--pewter-gold);
     color: var(--pewter-gold);
     font-size: 1rem;
@@ -419,12 +418,11 @@ body::before {
 }
 
 .subtab {
+    display: inline-block;
+    text-decoration: none;
     padding: 0.5rem 1rem;
     min-height: 44px;
-    -webkit-appearance: none;
-    appearance: none;
     background-color: transparent;
-    background-image: none;
     border: 1px solid rgba(184, 160, 130, 0.5);
     color: var(--text-light);
     font-size: 0.9rem;
@@ -616,8 +614,16 @@ body::before {
     z-index: 100;
 }
 
+.lightbox-close,
+.lightbox-prev,
+.lightbox-next {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
 .lightbox-close {
-    -webkit-appearance: none;
     appearance: none;
     min-width: 44px;
     min-height: 44px;
@@ -636,8 +642,6 @@ body::before {
 
 .lightbox-prev,
 .lightbox-next {
-    -webkit-appearance: none;
-    appearance: none;
     min-width: 44px;
     min-height: 44px;
     position: absolute;

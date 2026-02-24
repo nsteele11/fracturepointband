@@ -508,9 +508,6 @@ function initMediaGallery() {
             .join('');
         youtubeLink.style.display = 'inline-block';
         youtubeLink.href = YOUTUBE_CHANNEL_URL;
-        videoMasonry.querySelectorAll('.masonry-item').forEach((el, i) => {
-            el.addEventListener('click', () => openLightbox(videos, i, true));
-        });
     }
 
     async function loadPhotos() {
@@ -538,9 +535,6 @@ function initMediaGallery() {
                     '" alt="" loading="lazy"></div>'
             )
             .join('');
-        photosMasonry.querySelectorAll('.masonry-item').forEach((el, i) => {
-            el.addEventListener('click', () => openLightbox(images, i, false));
-        });
     }
 
     function switchContent() {
@@ -555,43 +549,63 @@ function initMediaGallery() {
         }
     }
 
-    mediaTabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
+    let lastTapTarget = null;
+    let lastTapTime = 0;
+    function handleTap(e, target) {
+        const mt = target && target.closest && target.closest('.media-tab');
+        const st = target && target.closest && target.closest('.subtab');
+        const mi = target && target.closest && target.closest('.masonry-item');
+        const lc = target && target.closest && target.closest('.lightbox-close');
+        const lp = target && target.closest && target.closest('.lightbox-prev');
+        const ln = target && target.closest && target.closest('.lightbox-next');
+
+        const key = (mt || st || mi || lc || lp || ln);
+        if (key && Date.now() - lastTapTime < 500 && lastTapTarget === key) return;
+        if (key) { lastTapTarget = key; lastTapTime = Date.now(); }
+
+        if (mt) {
+            e.preventDefault();
             mediaTabs.forEach((t) => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentMedia = tab.dataset.media;
+            mt.classList.add('active');
+            currentMedia = mt.dataset.media;
             updateSubtabStates();
             switchContent();
-        });
-    });
-
-    subtabs.forEach((tab) => {
-        tab.addEventListener('click', () => {
-            if (tab.classList.contains('disabled')) return;
+        } else if (st && !st.classList.contains('disabled')) {
+            e.preventDefault();
             subtabs.forEach((t) => t.classList.remove('active'));
-            tab.classList.add('active');
-            currentCategory = tab.dataset.category;
+            st.classList.add('active');
+            currentCategory = st.dataset.category;
             switchContent();
-        });
-    });
-
-    // iPhone Safari: empty touch listeners on interactive areas help click events fire reliably
-    [document.querySelector('.media-tabs'), document.querySelector('.media-subtabs'), document.getElementById('video-panel'), document.getElementById('photos-panel')].forEach((el) => {
-        if (el) {
-            el.addEventListener('touchstart', () => {}, { passive: true });
-            el.addEventListener('touchend', () => {}, { passive: true });
+        } else if (mi) {
+            e.preventDefault();
+            const idx = parseInt(mi.getAttribute('data-index'), 10);
+            const items = mi.getAttribute('data-type') === 'video'
+                ? (cache.video[currentCategory] || [])
+                : (cache.photos[currentCategory] || []);
+            if (items[idx]) openLightbox(items, idx, mi.getAttribute('data-type') === 'video');
+        } else if (lc) {
+            e.preventDefault();
+            closeLightbox();
+        } else if (lp) {
+            e.preventDefault();
+            lightboxIndex = (lightboxIndex - 1 + lightboxItems.length) % lightboxItems.length;
+            document.getElementById('lightbox')._show();
+        } else if (ln) {
+            e.preventDefault();
+            lightboxIndex = (lightboxIndex + 1) % lightboxItems.length;
+            document.getElementById('lightbox')._show();
         }
-    });
+    }
 
-    document.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
-    document.querySelector('.lightbox-prev').addEventListener('click', () => {
-        lightboxIndex = (lightboxIndex - 1 + lightboxItems.length) % lightboxItems.length;
-        document.getElementById('lightbox')._show();
+    document.addEventListener('click', (e) => {
+        handleTap(e, e.target);
     });
-    document.querySelector('.lightbox-next').addEventListener('click', () => {
-        lightboxIndex = (lightboxIndex + 1) % lightboxItems.length;
-        document.getElementById('lightbox')._show();
-    });
+    document.addEventListener('touchend', (e) => {
+        const target = e.changedTouches && e.changedTouches[0]
+            ? document.elementFromPoint(e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+            : e.target;
+        if (target) handleTap(e, target);
+    }, { passive: false });
 
     document.getElementById('lightbox').addEventListener('click', (e) => {
         if (e.target.id === 'lightbox') closeLightbox();
