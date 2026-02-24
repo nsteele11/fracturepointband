@@ -538,14 +538,22 @@ function initMediaGallery() {
     }
 
     function switchContent() {
-        if (currentMedia === 'video') {
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        if (isMobile) {
             videoPanel.classList.add('active');
-            photosPanel.classList.remove('active');
-            loadVideos();
-        } else {
             photosPanel.classList.add('active');
-            videoPanel.classList.remove('active');
+            loadVideos();
             loadPhotos();
+        } else {
+            if (currentMedia === 'video') {
+                videoPanel.classList.add('active');
+                photosPanel.classList.remove('active');
+                loadVideos();
+            } else {
+                photosPanel.classList.add('active');
+                videoPanel.classList.remove('active');
+                loadPhotos();
+            }
         }
     }
 
