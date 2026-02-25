@@ -537,17 +537,23 @@ body::before {
 .masonry-item .masonry-thumb {
     width: 100%;
     display: block;
-    aspect-ratio: 1;
     object-fit: cover;
+}
+
+/* Video thumbnails: natural 16:9 landscape */
+.masonry-item[data-type="video"] .masonry-thumb,
+.masonry-item[data-type="video"] .masonry-thumb img {
+    aspect-ratio: 16 / 9;
+}
+
+/* Photo thumbnails: square */
+.masonry-item[data-type="photo"] img {
+    aspect-ratio: 1;
 }
 
 .masonry-item .masonry-thumb {
     position: relative;
     background: #111;
-}
-
-.masonry-item .masonry-thumb img {
-    aspect-ratio: 1;
 }
 
 .media-placeholder.media-loading {
