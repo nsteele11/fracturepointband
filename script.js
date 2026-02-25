@@ -8,9 +8,9 @@ const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty 
 // Netlify URL - required when site is on different host (e.g. fracturepointband.com)
 const NETLIFY_SITE_URL = 'https://funny-cendol-31d47d.netlify.app';
 
-// YouTube - channel URL and ID for embedding videos
-const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/channel/UCam1SbBcBmBG7Siruznfdhw';
-const YOUTUBE_CHANNEL_ID = 'UCam1SbBcBmBG7Siruznfdhw';
+// YouTube - channel handle and URL (info@fracturepointband.com)
+const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@FracturePointOfficial';
+const YOUTUBE_CHANNEL_HANDLE = 'FracturePointOfficial';
 // Optional: playlist IDs per category (or use channel videos for all)
 const YOUTUBE_PLAYLISTS = { 'live-shows': '', 'the-band': '', 'behind-the-scenes': '' };
 // Cloudinary subfolders per category - must match folder names in Cloudinary
@@ -343,7 +343,7 @@ let touchStartX = 0;
 async function fetchYouTubeVideos(category) {
     const playlistId = YOUTUBE_PLAYLISTS[category];
     const baseUrl = NETLIFY_SITE_URL || window.location.origin;
-    let apiUrl = baseUrl + '/.netlify/functions/youtube-videos?channelId=' + encodeURIComponent(YOUTUBE_CHANNEL_ID);
+    let apiUrl = baseUrl + '/.netlify/functions/youtube-videos?handle=' + encodeURIComponent(YOUTUBE_CHANNEL_HANDLE);
     if (playlistId) apiUrl = baseUrl + '/.netlify/functions/youtube-videos?playlistId=' + encodeURIComponent(playlistId);
     try {
         const res = await fetch(apiUrl, { mode: 'cors' });
@@ -482,7 +482,7 @@ function initMediaGallery() {
         let videos = cache.video[currentCategory];
         if (videos === undefined) {
             try {
-                if (YOUTUBE_CHANNEL_ID) videos = await fetchYouTubeVideos(currentCategory);
+                if (YOUTUBE_CHANNEL_HANDLE) videos = await fetchYouTubeVideos(currentCategory);
             } catch (e) {}
             cache.video[currentCategory] = videos || [];
             videos = cache.video[currentCategory];

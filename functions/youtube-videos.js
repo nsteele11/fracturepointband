@@ -16,6 +16,7 @@ exports.handler = async (event) => {
 
     const apiKey = process.env.YOUTUBE_API_KEY;
     const channelId = event.queryStringParameters?.channelId || '';
+    const handle = event.queryStringParameters?.handle || '';
     let playlistId = event.queryStringParameters?.playlistId || '';
 
     if (!apiKey) {
@@ -27,9 +28,10 @@ exports.handler = async (event) => {
     }
 
     try {
-        if (!playlistId && channelId) {
+        if (!playlistId && (channelId || handle)) {
+            const channelParam = handle ? `forHandle=${encodeURIComponent(handle)}` : `id=${channelId}`;
             const uploadsRes = await fetch(
-                `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&id=${channelId}&key=${apiKey}`
+                `https://www.googleapis.com/youtube/v3/channels?part=contentDetails&${channelParam}&key=${apiKey}`
             );
             const uploadsData = await uploadsRes.json();
             if (uploadsData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads) {
