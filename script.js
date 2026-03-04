@@ -387,7 +387,7 @@ function openLightbox(items, index, isVideo) {
         if (isVideo) {
             img.style.display = 'none';
             videoWrap.style.display = 'block';
-            vid.src = 'https://www.youtube.com/embed/' + item.id + '?autoplay=1&rel=0&modestbranding=1';
+            vid.src = 'https://www.youtube.com/embed/' + item.id + '?rel=0&modestbranding=1';
         } else {
             videoWrap.style.display = 'none';
             vid.src = '';
