@@ -725,7 +725,20 @@ function initEpkPdfViewer() {
     const zoomOutBtn = document.getElementById('epk-zoom-out');
     const zoomInBtn = document.getElementById('epk-zoom-in');
 
-    if (!canvas || typeof pdfjsLib === 'undefined') return;
+    const fallbackIframe = document.getElementById('epk-pdf-fallback');
+    const canvasWrap = canvas?.closest('.epk-pdf-canvas-wrap');
+    const navEl = document.querySelector('.epk-pdf-nav');
+
+    function showFallback() {
+        if (fallbackIframe) fallbackIframe.style.display = 'block';
+        if (canvas) canvas.style.display = 'none';
+        if (navEl) navEl.style.display = 'none';
+    }
+
+    if (!canvas || typeof pdfjsLib === 'undefined') {
+        showFallback();
+        return function() {};
+    }
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -780,18 +793,11 @@ function initEpkPdfViewer() {
             totalPages = pdfDoc.numPages;
             currentPage = 1;
             scale = DEFAULT_SCALE;
+            showCustomViewer();
             await renderPage();
         } catch (err) {
             console.error('EPK PDF load error:', err);
-            pageInfo.textContent = 'Load error';
-            const wrap = pageInfo.closest('.epk-pdf-wrapper');
-            if (wrap) {
-                const errEl = document.createElement('p');
-                errEl.className = 'epk-viewer-fallback';
-                errEl.style.color = 'var(--pewter-gold)';
-                errEl.textContent = 'Unable to load PDF. Try the link below to open it in a new tab.';
-                wrap.querySelector('.epk-pdf-canvas-wrap')?.appendChild(errEl);
-            }
+            showFallback();
         }
     }
 
