@@ -669,37 +669,40 @@ function initMediaGallery() {
 document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.page-section');
+    const VALID_PAGES = ['shows', 'video', 'press'];
 
-    // Handle navigation clicks
+    function showSection(targetPage) {
+        const page = VALID_PAGES.includes(targetPage) ? targetPage : 'shows';
+
+        navLinks.forEach(l => {
+            l.classList.toggle('active', l.getAttribute('data-page') === page);
+        });
+        sections.forEach(section => {
+            section.classList.toggle('active', section.id === page);
+        });
+
+        const targetSection = document.getElementById(page);
+        if (targetSection) {
+            if (page === 'press' && typeof loadEpkPdf === 'function') loadEpkPdf();
+        }
+
+        history.replaceState(null, '', '#' + page);
+    }
+
+    function syncFromHash() {
+        const hash = (location.hash || '#shows').replace('#', '');
+        showSection(hash);
+    }
+
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            const targetPage = this.getAttribute('data-page');
-            
-            // Update active nav link
-            navLinks.forEach(l => l.classList.remove('active'));
-            this.classList.add('active');
-            
-            // Show target section, hide others
-            sections.forEach(section => {
-                section.classList.remove('active');
-            });
-            
-            const targetSection = document.getElementById(targetPage);
-            if (targetSection) {
-                targetSection.classList.add('active');
-                if (targetPage === 'press' && loadEpkPdf) loadEpkPdf();
-            }
+            showSection(this.getAttribute('data-page'));
         });
     });
 
-    // Set initial active state (Upcoming Shows is the landing page)
-    const initialLink = document.querySelector('[data-page="shows"]');
-    if (initialLink) {
-        initialLink.classList.add('active');
-    }
-    
+    window.addEventListener('hashchange', syncFromHash);
+
     // Load shows data
     fetchShowsData().then(({ upcomingShows, pastShows }) => {
         renderShows(upcomingShows, pastShows);
@@ -708,8 +711,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load media gallery (videos + photos with tabs)
     initMediaGallery();
 
-    // EPK PDF viewer - load only when Press section is shown (canvas must be visible)
+    // EPK PDF viewer - load only when Press section is shown
     const loadEpkPdf = initEpkPdfViewer();
+
+    // Read URL hash and show corresponding section (after loadEpkPdf is defined)
+    syncFromHash();
 
 function initEpkPdfViewer() {
     const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';

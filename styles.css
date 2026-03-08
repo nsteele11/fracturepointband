@@ -134,7 +134,7 @@ body::before {
     display: block;
 }
 
-#photos,
+#video,
 #press {
     position: relative;
     z-index: 2;
