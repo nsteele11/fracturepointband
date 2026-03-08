@@ -689,6 +689,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const targetSection = document.getElementById(targetPage);
             if (targetSection) {
                 targetSection.classList.add('active');
+                if (targetPage === 'press' && loadEpkPdf) loadEpkPdf();
             }
         });
     });
@@ -707,9 +708,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load media gallery (videos + photos with tabs)
     initMediaGallery();
 
-    // EPK PDF viewer with compact nav and high default zoom
-    initEpkPdfViewer();
-});
+    // EPK PDF viewer - load only when Press section is shown (canvas must be visible)
+    const loadEpkPdf = initEpkPdfViewer();
 
 function initEpkPdfViewer() {
     const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
@@ -773,6 +773,7 @@ function initEpkPdfViewer() {
     }
 
     async function loadPdf() {
+        if (pdfDoc) return; /* already loaded */
         try {
             const loadingTask = pdfjsLib.getDocument(EPK_PDF_URL);
             pdfDoc = await loadingTask.promise;
@@ -783,6 +784,14 @@ function initEpkPdfViewer() {
         } catch (err) {
             console.error('EPK PDF load error:', err);
             pageInfo.textContent = 'Load error';
+            const wrap = pageInfo.closest('.epk-pdf-wrapper');
+            if (wrap) {
+                const errEl = document.createElement('p');
+                errEl.className = 'epk-viewer-fallback';
+                errEl.style.color = 'var(--pewter-gold)';
+                errEl.textContent = 'Unable to load PDF. Try the link below to open it in a new tab.';
+                wrap.querySelector('.epk-pdf-canvas-wrap')?.appendChild(errEl);
+            }
         }
     }
 
@@ -814,6 +823,7 @@ function initEpkPdfViewer() {
         }
     });
 
-    loadPdf();
+    return loadPdf;
 }
 
+});
