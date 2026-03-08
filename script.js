@@ -706,5 +706,114 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load media gallery (videos + photos with tabs)
     initMediaGallery();
+
+    // EPK PDF viewer with compact nav and high default zoom
+    initEpkPdfViewer();
 });
+
+function initEpkPdfViewer() {
+    const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
+    const DEFAULT_SCALE = 1.75;
+    const MIN_SCALE = 0.5;
+    const MAX_SCALE = 3;
+    const ZOOM_STEP = 0.25;
+
+    const canvas = document.getElementById('epk-pdf-canvas');
+    const pageInfo = document.getElementById('epk-page-info');
+    const prevBtn = document.getElementById('epk-prev');
+    const nextBtn = document.getElementById('epk-next');
+    const zoomOutBtn = document.getElementById('epk-zoom-out');
+    const zoomInBtn = document.getElementById('epk-zoom-in');
+
+    if (!canvas || typeof pdfjsLib === 'undefined') return;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = DEFAULT_SCALE;
+    let totalPages = 0;
+    let renderTask = null;
+
+    function updateButtons() {
+        prevBtn.disabled = currentPage <= 1;
+        nextBtn.disabled = currentPage >= totalPages;
+        zoomOutBtn.disabled = scale <= MIN_SCALE;
+        zoomInBtn.disabled = scale >= MAX_SCALE;
+    }
+
+    function updatePageInfo() {
+        pageInfo.textContent = totalPages ? currentPage + ' / ' + totalPages : '— / —';
+    }
+
+    async function renderPage() {
+        if (!pdfDoc) return;
+        if (renderTask) renderTask.cancel();
+
+        const page = await pdfDoc.getPage(currentPage);
+        const viewport = page.getViewport({ scale: scale });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const ctx = canvas.getContext('2d');
+        renderTask = page.render({
+            canvasContext: ctx,
+            viewport: viewport
+        });
+        try {
+            await renderTask.promise;
+        } catch (e) {
+            if (e?.name !== 'RenderingCancelledException') throw e;
+        }
+        renderTask = null;
+
+        updateButtons();
+        updatePageInfo();
+    }
+
+    async function loadPdf() {
+        try {
+            const loadingTask = pdfjsLib.getDocument(EPK_PDF_URL);
+            pdfDoc = await loadingTask.promise;
+            totalPages = pdfDoc.numPages;
+            currentPage = 1;
+            scale = DEFAULT_SCALE;
+            await renderPage();
+        } catch (err) {
+            console.error('EPK PDF load error:', err);
+            pageInfo.textContent = 'Load error';
+        }
+    }
+
+    prevBtn.addEventListener('click', async () => {
+        if (currentPage > 1) {
+            currentPage--;
+            await renderPage();
+        }
+    });
+
+    nextBtn.addEventListener('click', async () => {
+        if (currentPage < totalPages) {
+            currentPage++;
+            await renderPage();
+        }
+    });
+
+    zoomOutBtn.addEventListener('click', async () => {
+        if (scale > MIN_SCALE) {
+            scale = Math.max(MIN_SCALE, scale - ZOOM_STEP);
+            await renderPage();
+        }
+    });
+
+    zoomInBtn.addEventListener('click', async () => {
+        if (scale < MAX_SCALE) {
+            scale = Math.min(MAX_SCALE, scale + ZOOM_STEP);
+            await renderPage();
+        }
+    });
+
+    loadPdf();
+}
 

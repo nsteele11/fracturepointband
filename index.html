@@ -97,13 +97,24 @@
                 </div>
                 <div class="epk-viewer-wrap">
                     <h3 class="epk-heading">View Press Kit</h3>
-                    <iframe src="epk/FracturePoint_EPK.pdf" class="epk-pdf-embed" title="FracturePoint Press Kit"></iframe>
-                    <p class="epk-viewer-fallback"><a href="epk/FracturePoint_EPK.pdf" target="_blank" rel="noopener" class="epk-link">Open Press Kit in new tab</a> if it doesn’t display below</p>
+                    <div class="epk-pdf-wrapper">
+                        <nav class="epk-pdf-nav" aria-label="PDF navigation">
+                            <button type="button" class="epk-pdf-nav-btn" id="epk-prev" aria-label="Previous page" title="Previous page">&lsaquo;</button>
+                            <button type="button" class="epk-pdf-nav-btn" id="epk-next" aria-label="Next page" title="Next page">&rsaquo;</button>
+                            <span class="epk-pdf-page" id="epk-page-info">— / —</span>
+                            <button type="button" class="epk-pdf-nav-btn" id="epk-zoom-out" aria-label="Zoom out" title="Zoom out">−</button>
+                            <button type="button" class="epk-pdf-nav-btn" id="epk-zoom-in" aria-label="Zoom in" title="Zoom in">+</button>
+                        </nav>
+                        <div class="epk-pdf-canvas-wrap">
+                            <canvas id="epk-pdf-canvas"></canvas>
+                        </div>
+                    </div>
+                    <p class="epk-viewer-fallback"><a href="epk/FracturePoint_EPK.pdf" target="_blank" rel="noopener" class="epk-link">Open Press Kit in new tab</a> if it doesn’t display above</p>
                 </div>
                 <div class="epk-content">
                     <div class="epk-block">
                         <h3 class="epk-heading">About FracturePoint</h3>
-                        <p class="epk-text">FracturePoint is a band that blends heavy riffs with melodic hooks. Add your bio here—band origins, influences, what sets you apart, and any notable achievements or releases.</p>
+                        <p class="epk-text">FracturePoint combines heavy riffs, powerful vocals and melodic hooks to create a unique sound that blends influences in heavy rock, alternative and prog metal.</p>
                     </div>
                     <div class="epk-block">
                         <h3 class="epk-heading">Contact</h3>
@@ -169,6 +180,7 @@
         <div class="lightbox-counter"><span id="lightbox-index">1</span> / <span id="lightbox-total">1</span></div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
