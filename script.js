@@ -684,17 +684,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (page === 'press' && typeof loadEpkPdf === 'function') loadEpkPdf();
 
-        history.replaceState(null, '', '#' + page);
+        var url = location.pathname + '?page=' + page;
+        history.replaceState(null, '', url);
     }
 
-    function syncFromHash() {
-        const hash = (location.hash || '').replace(/^#/, '');
-        const page = VALID_PAGES.includes(hash) ? hash : 'shows';
-        showSection(page);
+    function getPageFromUrl() {
+        var m = location.search.match(/[?&]page=(shows|video|press)/);
+        if (m) return m[1];
+        var h = (location.hash || '').replace(/^#/, '');
+        return VALID_PAGES.includes(h) ? h : 'shows';
     }
 
-    // Process hash FIRST before any init that might throw
-    syncFromHash();
+    function syncFromUrl() {
+        showSection(getPageFromUrl());
+    }
+
+    // Process URL first (query params survive redirects; hash often does not)
+    syncFromUrl();
 
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -703,7 +709,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    window.addEventListener('hashchange', syncFromHash);
+    window.addEventListener('hashchange', syncFromUrl);
+    window.addEventListener('popstate', syncFromUrl);
 
     // Load shows data
     fetchShowsData().then(({ upcomingShows, pastShows }) => {
@@ -716,8 +723,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // EPK PDF viewer
     loadEpkPdf = initEpkPdfViewer();
 
-    // If we landed on press via hash, trigger PDF load now
-    if ((location.hash || '').replace(/^#/, '') === 'press') loadEpkPdf();
+    // If we landed on press, trigger PDF load now
+    if (getPageFromUrl() === 'press') loadEpkPdf();
 
 function initEpkPdfViewer() {
     const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
