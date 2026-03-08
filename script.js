@@ -670,6 +670,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.page-section');
     const VALID_PAGES = ['shows', 'video', 'press'];
+    let loadEpkPdf = null;
 
     function showSection(targetPage) {
         const page = VALID_PAGES.includes(targetPage) ? targetPage : 'shows';
@@ -681,18 +682,19 @@ document.addEventListener('DOMContentLoaded', function() {
             section.classList.toggle('active', section.id === page);
         });
 
-        const targetSection = document.getElementById(page);
-        if (targetSection) {
-            if (page === 'press' && typeof loadEpkPdf === 'function') loadEpkPdf();
-        }
+        if (page === 'press' && typeof loadEpkPdf === 'function') loadEpkPdf();
 
         history.replaceState(null, '', '#' + page);
     }
 
     function syncFromHash() {
-        const hash = (location.hash || '#shows').replace('#', '');
-        showSection(hash);
+        const hash = (location.hash || '').replace(/^#/, '');
+        const page = VALID_PAGES.includes(hash) ? hash : 'shows';
+        showSection(page);
     }
+
+    // Process hash FIRST before any init that might throw
+    syncFromHash();
 
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -711,11 +713,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load media gallery (videos + photos with tabs)
     initMediaGallery();
 
-    // EPK PDF viewer - load only when Press section is shown
-    const loadEpkPdf = initEpkPdfViewer();
+    // EPK PDF viewer
+    loadEpkPdf = initEpkPdfViewer();
 
-    // Read URL hash and show corresponding section (after loadEpkPdf is defined)
-    syncFromHash();
+    // If we landed on press via hash, trigger PDF load now
+    if ((location.hash || '').replace(/^#/, '') === 'press') loadEpkPdf();
 
 function initEpkPdfViewer() {
     const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
