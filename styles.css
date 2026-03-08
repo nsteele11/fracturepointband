@@ -136,7 +136,8 @@ body::before {
     display: block;
 }
 
-#photos {
+#photos,
+#press {
     position: relative;
     z-index: 2;
 }
@@ -369,6 +370,117 @@ body::before {
 .show-tickets a:hover {
     background-color: var(--pewter-gold);
     color: var(--bg-black);
+}
+
+/* Press / EPK Section */
+.epk-download-wrap {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.epk-download-btn {
+    display: inline-block;
+    color: var(--bg-black);
+    background-color: var(--pewter-gold);
+    text-decoration: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.75rem 1.75rem;
+    border: 2px solid var(--pewter-gold);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.epk-download-btn:hover {
+    background-color: var(--pewter-gold-hover);
+    border-color: var(--pewter-gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 160, 130, 0.4);
+}
+
+.epk-viewer-wrap {
+    margin-bottom: 3rem;
+}
+
+.epk-viewer-wrap .epk-heading {
+    margin-bottom: 1rem;
+}
+
+.epk-pdf-embed {
+    width: 100%;
+    height: 70vh;
+    min-height: 500px;
+    border: 2px solid rgba(184, 160, 130, 0.3);
+    border-radius: 8px;
+    background: #1a1a1a;
+}
+
+.epk-viewer-fallback {
+    margin-top: 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.epk-content {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.epk-block {
+    margin-bottom: 2.5rem;
+}
+
+.epk-block:last-child {
+    margin-bottom: 0;
+}
+
+.epk-heading {
+    font-size: 1.25rem;
+    color: var(--pewter-gold);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+}
+
+.epk-text {
+    color: var(--text-light);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 0.5rem;
+}
+
+.epk-text:last-child {
+    margin-bottom: 0;
+}
+
+.epk-contact {
+    margin-top: 0.5rem;
+}
+
+.epk-link {
+    color: var(--pewter-gold);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.epk-link:hover {
+    color: var(--pewter-gold-hover);
+    border-bottom-color: var(--pewter-gold);
+}
+
+.epk-links {
+    list-style: none;
+}
+
+.epk-links li {
+    margin-bottom: 0.5rem;
+}
+
+.epk-links li:last-child {
+    margin-bottom: 0;
 }
 
 /* Photos & Video Section - Tabbed Masonry */
@@ -884,6 +996,10 @@ body::before {
     .shows-cards-mobile {
         display: block;
         margin-top: 2rem;
+    }
+
+    .epk-pdf-embed {
+        min-height: 400px;
     }
 
     .media-split-container {
