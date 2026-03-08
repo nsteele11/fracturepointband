@@ -713,7 +713,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function initEpkPdfViewer() {
     const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
-    const DEFAULT_SCALE = 1.75;
+    const DEFAULT_SCALE = 1.225;
     const MIN_SCALE = 0.5;
     const MAX_SCALE = 3;
     const ZOOM_STEP = 0.25;
