@@ -11,6 +11,8 @@ const NETLIFY_SITE_URL = typeof location !== 'undefined' ? location.origin : 'ht
 // YouTube - channel handle and URL (info@fracturepointband.com)
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@FracturePointOfficial';
 const YOUTUBE_CHANNEL_HANDLE = 'FracturePointOfficial';
+// Optional: add video IDs here if API fails - e.g. ['dQw4w9WgXcQ']
+const YOUTUBE_FALLBACK_VIDEO_IDS = [];
 // Optional: playlist IDs per category (or use channel videos for all)
 const YOUTUBE_PLAYLISTS = { 'live-shows': '', 'the-band': '', 'behind-the-scenes': '' };
 // Cloudinary subfolders per category - must match folder names in Cloudinary
@@ -342,31 +344,45 @@ let touchStartX = 0;
 
 async function fetchYouTubeVideos(category) {
     const playlistId = YOUTUBE_PLAYLISTS[category];
-    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
-    let apiUrl = baseUrl + '/.netlify/functions/youtube-videos?handle=' + encodeURIComponent(YOUTUBE_CHANNEL_HANDLE);
-    if (playlistId) apiUrl = baseUrl + '/.netlify/functions/youtube-videos?playlistId=' + encodeURIComponent(playlistId);
-    try {
-        const res = await fetch(apiUrl, { mode: 'cors' });
-        const data = await res.json();
-        return data && data.videos ? data.videos : [];
-    } catch (e) {
-        return [];
+    const bases = [
+        (typeof location !== 'undefined' && location.origin) ? location.origin : '',
+        'https://funny-cendol-31d47d.netlify.app'
+    ].filter(Boolean);
+    const path = '/api/youtube-videos?handle=' + encodeURIComponent(YOUTUBE_CHANNEL_HANDLE) +
+        (playlistId ? '&playlistId=' + encodeURIComponent(playlistId) : '');
+    for (const base of bases) {
+        try {
+            const res = await fetch(base + path, { mode: 'cors' });
+            const data = await res.json().catch(function() { return {}; });
+            if (data && data.videos && data.videos.length > 0) return data.videos;
+            if (data && !data.error) return data.videos || [];
+            if (res.ok && data && Array.isArray(data.videos)) return data.videos;
+        } catch (e) { continue; }
     }
+    if (YOUTUBE_FALLBACK_VIDEO_IDS.length > 0) {
+        return YOUTUBE_FALLBACK_VIDEO_IDS.map(function(id) { return { id: id, title: '' }; });
+    }
+    return [];
 }
 
 async function fetchCloudinaryPhotos(category) {
     const subfolder = CLOUDINARY_CATEGORIES[category] || '';
     const folder = CLOUDINARY_FOLDER ? (subfolder ? CLOUDINARY_FOLDER + '/' + subfolder : CLOUDINARY_FOLDER) : subfolder;
     const foldersToTry = folder ? [folder, CLOUDINARY_FOLDER, ''] : [''];
-    const baseUrl = NETLIFY_SITE_URL || window.location.origin;
+    const bases = [
+        (typeof location !== 'undefined' && location.origin) ? location.origin : '',
+        'https://funny-cendol-31d47d.netlify.app'
+    ].filter(Boolean);
     for (const f of foldersToTry) {
-        try {
-            const url = baseUrl + '/.netlify/functions/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
-            const res = await fetch(url, { mode: 'cors' });
-            const data = await res.json();
-            const resources = (data.resources || []).filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
-            if (resources.length > 0) return resources.map((r) => ({ public_id: r.public_id }));
-        } catch (e) {}
+        const path = '/api/cloudinary-list' + (f ? '?folder=' + encodeURIComponent(f) : '');
+        for (const base of bases) {
+            try {
+                const res = await fetch(base + path, { mode: 'cors' });
+                const data = await res.json();
+                const resources = (data.resources || []).filter((r) => ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes((r.format || '').toLowerCase()));
+                if (resources.length > 0) return resources.map((r) => ({ public_id: r.public_id }));
+            } catch (e) {}
+        }
     }
     return [];
 }
@@ -489,9 +505,8 @@ function initMediaGallery() {
         }
         updateSubtabStates();
         if (videos.length === 0) {
-            videoMasonry.innerHTML = '<div class="media-placeholder"><p>No videos in this category.</p></div>';
-            youtubeLink.style.display = 'inline-block';
-            youtubeLink.href = YOUTUBE_CHANNEL_URL;
+            videoMasonry.innerHTML = '<div class="media-placeholder" style="grid-column:1/-1"><p>No videos loaded.</p><p style="margin-top:0.5rem;font-size:0.9rem">Visit our <a href="' + YOUTUBE_CHANNEL_URL + '" target="_blank" rel="noopener" style="color:var(--pewter-gold)">YouTube channel</a> for videos.</p></div>';
+            if (youtubeLink) { youtubeLink.style.display = 'inline-block'; youtubeLink.href = YOUTUBE_CHANNEL_URL; }
             return;
         }
         const thumbBase = 'https://img.youtube.com/vi/';
