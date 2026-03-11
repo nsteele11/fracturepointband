@@ -5,8 +5,8 @@ const GOOGLE_SHEET_URL = `https://docs.google.com/spreadsheets/d/e/${GOOGLE_SHEE
 // Cloudinary configuration - photos load from folder (including subfolders) via Netlify function
 const CLOUDINARY_CLOUD_NAME = 'dhvetz6qg';
 const CLOUDINARY_FOLDER = 'FracturePoint_Photos'; // e.g. 'band-photos' - empty = root folder
-// Netlify URL - required when site is on different host (e.g. fracturepointband.com)
-const NETLIFY_SITE_URL = 'https://funny-cendol-31d47d.netlify.app';
+// Use current origin for API calls (works on custom domain); fallback for local dev
+const NETLIFY_SITE_URL = typeof location !== 'undefined' ? location.origin : 'https://funny-cendol-31d47d.netlify.app';
 
 // YouTube - channel handle and URL (info@fracturepointband.com)
 const YOUTUBE_CHANNEL_URL = 'https://www.youtube.com/@FracturePointOfficial';
