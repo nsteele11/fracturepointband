@@ -963,6 +963,24 @@ body::before {
     opacity: 0.8;
 }
 
+.media-retry-btn {
+    margin-top: 0.75rem;
+    padding: 0.5rem 1.25rem;
+    background: transparent;
+    border: 2px solid var(--pewter-gold);
+    color: var(--pewter-gold);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.media-retry-btn:hover {
+    background: var(--pewter-gold);
+    color: var(--bg-black);
+}
+
 .media-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));

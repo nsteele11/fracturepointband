@@ -342,17 +342,35 @@ let lightboxItems = [];
 let lightboxIndex = 0;
 let touchStartX = 0;
 
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+async function fetchWithRetry(url, retries) {
+    retries = retries || (isMobile() ? 2 : 1);
+    for (var i = 0; i <= retries; i++) {
+        try {
+            var res = await fetch(url, { mode: 'cors' });
+            return res;
+        } catch (e) {
+            if (i < retries) await new Promise(function(r) { setTimeout(r, 800 + i * 400); });
+            else throw e;
+        }
+    }
+}
+
 async function fetchYouTubeVideos(category) {
     const playlistId = YOUTUBE_PLAYLISTS[category];
-    const bases = [
+    var bases = [
         (typeof location !== 'undefined' && location.origin) ? location.origin : '',
         'https://funny-cendol-31d47d.netlify.app'
     ].filter(Boolean);
+    if (isMobile()) bases = bases.reverse();
     const path = '/api/youtube-videos?handle=' + encodeURIComponent(YOUTUBE_CHANNEL_HANDLE) +
         (playlistId ? '&playlistId=' + encodeURIComponent(playlistId) : '');
     for (const base of bases) {
         try {
-            const res = await fetch(base + path, { mode: 'cors' });
+            const res = await fetchWithRetry(base + path);
             const data = await res.json().catch(function() { return {}; });
             if (data && data.videos && data.videos.length > 0) return data.videos;
             if (data && !data.error) return data.videos || [];
@@ -505,8 +523,12 @@ function initMediaGallery() {
         }
         updateSubtabStates();
         if (videos.length === 0) {
-            videoMasonry.innerHTML = '<div class="media-placeholder" style="grid-column:1/-1"><p>No videos loaded.</p><p style="margin-top:0.5rem;font-size:0.9rem">Visit our <a href="' + YOUTUBE_CHANNEL_URL + '" target="_blank" rel="noopener" style="color:var(--pewter-gold)">YouTube channel</a> for videos.</p></div>';
+            videoMasonry.innerHTML = '<div class="media-placeholder" style="grid-column:1/-1"><p>No videos loaded.</p><button type="button" class="media-retry-btn">Retry</button><p style="margin-top:0.75rem;font-size:0.9rem">Or visit our <a href="' + YOUTUBE_CHANNEL_URL + '" target="_blank" rel="noopener" style="color:var(--pewter-gold)">YouTube channel</a></p></div>';
             if (youtubeLink) { youtubeLink.style.display = 'inline-block'; youtubeLink.href = YOUTUBE_CHANNEL_URL; }
+            videoMasonry.querySelector('.media-retry-btn')?.addEventListener('click', function() {
+                delete cache.video[currentCategory];
+                loadVideos();
+            });
             return;
         }
         const thumbBase = 'https://img.youtube.com/vi/';
