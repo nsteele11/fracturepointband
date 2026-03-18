@@ -708,8 +708,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const sections = document.querySelectorAll('.page-section');
     const VALID_PAGES = ['shows', 'video', 'press'];
     let loadEpkPdf = null;
+    let lastTrackedPage = null;
 
-    function showSection(targetPage) {
+    function trackVirtualPageview(page) {
+        // GA4 SPA tracking: send a virtual page_view on section changes.
+        // This keeps your navigation as-is; it just improves analytics attribution.
+        if (typeof window === 'undefined' || typeof window.gtag !== 'function') return;
+        if (page === lastTrackedPage) return;
+        lastTrackedPage = page;
+
+        const titles = {
+            shows: 'Upcoming Shows',
+            video: 'Video & Photos',
+            press: 'Press & EPK'
+        };
+
+        const pageTitle = 'FracturePoint - ' + (titles[page] || 'FracturePoint');
+        const pagePath = location.pathname + '?page=' + page;
+        const pageLocation = location.origin + pagePath;
+
+        window.gtag('event', 'page_view', {
+            page_title: pageTitle,
+            page_location: pageLocation,
+            page_path: pagePath
+        });
+    }
+
+    function showSection(targetPage, updateUrlMode) {
         const page = VALID_PAGES.includes(targetPage) ? targetPage : 'shows';
 
         navLinks.forEach(l => {
@@ -721,8 +746,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (page === 'press' && typeof loadEpkPdf === 'function') loadEpkPdf();
 
-        var url = location.pathname + '?page=' + page;
-        history.replaceState(null, '', url);
+        // Keep the homepage clean (/) unless user explicitly deep-linked or clicked a nav item.
+        // updateUrlMode:
+        // - 'query': always write ?page=
+        // - 'hash': always write #page
+        // - 'none': do not change URL
+        // - undefined: only write when necessary
+        if (updateUrlMode === 'none') return;
+        if (updateUrlMode === 'hash') {
+            history.replaceState(null, '', location.pathname + location.search + '#' + page);
+            return;
+        }
+        if (updateUrlMode === 'query') {
+            history.replaceState(null, '', location.pathname + '?page=' + page);
+            return;
+        }
+        // default behavior: if we're on a deep link already, keep it; otherwise don't add ?page=shows.
+        const hasQuery = /[?&]page=(shows|video|press)/.test(location.search || '');
+        const hasHash = /^#(shows|video|press)$/.test(location.hash || '');
+        if (!hasQuery && !hasHash && page === 'shows') return;
+        history.replaceState(null, '', location.pathname + '?page=' + page);
+
+        trackVirtualPageview(page);
     }
 
     function getPageFromUrl() {
@@ -733,7 +778,16 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function syncFromUrl() {
-        showSection(getPageFromUrl());
+        const page = getPageFromUrl();
+        const hasQuery = /[?&]page=(shows|video|press)/.test(location.search || '');
+        const hasHash = /^#(shows|video|press)$/.test(location.hash || '');
+        // If the user came in with #press/#video keep the hash; if they came with ?page= keep the query.
+        if (hasHash) showSection(page, 'hash');
+        else if (hasQuery) showSection(page, 'query');
+        else showSection(page, 'none');
+
+        // Ensure first view is tracked even if URL stays clean (/).
+        trackVirtualPageview(page);
     }
 
     // Process URL first (query params survive redirects; hash often does not)
@@ -742,7 +796,8 @@ document.addEventListener('DOMContentLoaded', function() {
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            showSection(this.getAttribute('data-page'));
+            // Clicking nav should always produce a shareable URL.
+            showSection(this.getAttribute('data-page'), 'query');
         });
     });
 
