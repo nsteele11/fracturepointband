@@ -449,6 +449,7 @@ function initMediaGallery() {
     const videoPanel = document.getElementById('video-panel');
     const photosPanel = document.getElementById('photos-panel');
     const fanMediaPanel = document.getElementById('fan-media-panel');
+    const mediaGalleryArea = document.querySelector('.media-content-area');
     const mediaSubtabs = document.querySelector('.media-subtabs-desktop');
     const videoMasonry = document.getElementById('video-masonry');
     const photosMasonry = document.getElementById('photos-masonry');
@@ -578,30 +579,39 @@ function initMediaGallery() {
 
     function switchContent() {
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
         if (isMobile) {
-            if (mediaSubtabs) mediaSubtabs.style.display = '';
+            if (mediaSubtabs) mediaSubtabs.hidden = false;
+            if (mediaGalleryArea) mediaGalleryArea.hidden = false;
+            if (fanMediaPanel) fanMediaPanel.hidden = false;
             videoPanel.classList.add('active');
             photosPanel.classList.add('active');
-            fanMediaPanel.classList.add('active');
             loadVideos();
             loadPhotos();
-        } else if (currentMedia === 'fan-media') {
-            if (mediaSubtabs) mediaSubtabs.style.display = 'none';
+            return;
+        }
+
+        if (currentMedia === 'fan-media') {
+            if (mediaSubtabs) mediaSubtabs.hidden = true;
+            if (mediaGalleryArea) mediaGalleryArea.hidden = true;
+            if (fanMediaPanel) fanMediaPanel.hidden = false;
             videoPanel.classList.remove('active');
             photosPanel.classList.remove('active');
-            fanMediaPanel.classList.add('active');
-        } else {
-            if (mediaSubtabs) mediaSubtabs.style.display = '';
-            fanMediaPanel.classList.remove('active');
-            if (currentMedia === 'video') {
-                videoPanel.classList.add('active');
-                photosPanel.classList.remove('active');
-                loadVideos();
-            } else {
-                photosPanel.classList.add('active');
-                videoPanel.classList.remove('active');
-                loadPhotos();
-            }
+            return;
+        }
+
+        if (mediaSubtabs) mediaSubtabs.hidden = false;
+        if (mediaGalleryArea) mediaGalleryArea.hidden = false;
+        if (fanMediaPanel) fanMediaPanel.hidden = true;
+
+        if (currentMedia === 'video') {
+            videoPanel.classList.add('active');
+            photosPanel.classList.remove('active');
+            loadVideos();
+        } else if (currentMedia === 'photos') {
+            photosPanel.classList.add('active');
+            videoPanel.classList.remove('active');
+            loadPhotos();
         }
     }
 
@@ -640,7 +650,7 @@ function initMediaGallery() {
             e.preventDefault();
             mediaTabs.forEach((t) => t.classList.remove('active'));
             mt.classList.add('active');
-            currentMedia = mt.dataset.media;
+            currentMedia = mt.getAttribute('data-media') || 'video';
             updateSubtabStates();
             switchContent();
         } else if (st && !st.classList.contains('disabled')) {
