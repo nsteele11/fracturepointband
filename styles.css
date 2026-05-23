@@ -657,6 +657,55 @@ body::before {
     #video-panel .youtube-link-wrap {
         margin-top: 1rem;
     }
+    #fan-media-panel {
+        display: block !important;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(184, 160, 130, 0.3);
+    }
+}
+
+.fan-media-panel {
+    max-width: 42rem;
+    padding: 1rem 0 2rem;
+}
+
+.fan-media-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--pewter-gold);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 1rem;
+}
+
+.fan-media-desc {
+    font-size: 1.05rem;
+    line-height: 1.65;
+    color: var(--text-light);
+    margin: 0 0 1.75rem;
+}
+
+.fan-media-submit-btn {
+    display: inline-block;
+    color: var(--bg-black);
+    background-color: var(--pewter-gold);
+    text-decoration: none;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.75rem 1.75rem;
+    border: 2px solid var(--pewter-gold);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.fan-media-submit-btn:hover {
+    background-color: var(--pewter-gold-hover);
+    border-color: var(--pewter-gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 160, 130, 0.4);
 }
 
 .media-content-area {

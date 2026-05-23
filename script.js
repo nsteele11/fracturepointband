@@ -342,12 +342,8 @@ let lightboxItems = [];
 let lightboxIndex = 0;
 let touchStartX = 0;
 
-function isMobile() {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
 async function fetchWithRetry(url, retries) {
-    retries = retries || (isMobile() ? 2 : 1);
+    retries = retries !== undefined ? retries : 2;
     for (var i = 0; i <= retries; i++) {
         try {
             var res = await fetch(url, { mode: 'cors' });
@@ -361,20 +357,23 @@ async function fetchWithRetry(url, retries) {
 
 async function fetchYouTubeVideos(category) {
     const playlistId = YOUTUBE_PLAYLISTS[category];
-    var bases = [
-        (typeof location !== 'undefined' && location.origin) ? location.origin : '',
-        'https://funny-cendol-31d47d.netlify.app'
-    ].filter(Boolean);
-    if (isMobile()) bases = bases.reverse();
+    const origin = typeof location !== 'undefined' ? location.origin : '';
+    const netlifyBase = 'https://funny-cendol-31d47d.netlify.app';
+    const bases = [];
+    if (origin && origin.includes('netlify.app')) {
+        bases.push(origin);
+    } else {
+        if (origin) bases.push(origin);
+        bases.push(netlifyBase);
+    }
     const path = '/api/youtube-videos?handle=' + encodeURIComponent(YOUTUBE_CHANNEL_HANDLE) +
         (playlistId ? '&playlistId=' + encodeURIComponent(playlistId) : '');
     for (const base of bases) {
         try {
-            const res = await fetchWithRetry(base + path);
+            const res = await fetchWithRetry(base + path, 2);
             const data = await res.json().catch(function() { return {}; });
-            if (data && data.videos && data.videos.length > 0) return data.videos;
-            if (data && !data.error) return data.videos || [];
-            if (res.ok && data && Array.isArray(data.videos)) return data.videos;
+            if (!res.ok || data.error) continue;
+            if (data.videos && data.videos.length > 0) return data.videos;
         } catch (e) { continue; }
     }
     if (YOUTUBE_FALLBACK_VIDEO_IDS.length > 0) {
@@ -449,6 +448,8 @@ function initMediaGallery() {
     const subtabs = document.querySelectorAll('.subtab');
     const videoPanel = document.getElementById('video-panel');
     const photosPanel = document.getElementById('photos-panel');
+    const fanMediaPanel = document.getElementById('fan-media-panel');
+    const mediaSubtabs = document.querySelector('.media-subtabs-desktop');
     const videoMasonry = document.getElementById('video-masonry');
     const photosMasonry = document.getElementById('photos-masonry');
     const youtubeLink = document.getElementById('youtube-link');
@@ -459,6 +460,7 @@ function initMediaGallery() {
     const categories = Object.keys(CLOUDINARY_CATEGORIES);
 
     function updateSubtabStates() {
+        if (currentMedia === 'fan-media') return;
         const media = currentMedia;
         subtabs.forEach((tab) => {
             const cat = tab.dataset.category;
@@ -577,11 +579,20 @@ function initMediaGallery() {
     function switchContent() {
         const isMobile = window.matchMedia('(max-width: 768px)').matches;
         if (isMobile) {
+            if (mediaSubtabs) mediaSubtabs.style.display = '';
             videoPanel.classList.add('active');
             photosPanel.classList.add('active');
+            fanMediaPanel.classList.add('active');
             loadVideos();
             loadPhotos();
+        } else if (currentMedia === 'fan-media') {
+            if (mediaSubtabs) mediaSubtabs.style.display = 'none';
+            videoPanel.classList.remove('active');
+            photosPanel.classList.remove('active');
+            fanMediaPanel.classList.add('active');
         } else {
+            if (mediaSubtabs) mediaSubtabs.style.display = '';
+            fanMediaPanel.classList.remove('active');
             if (currentMedia === 'video') {
                 videoPanel.classList.add('active');
                 photosPanel.classList.remove('active');
