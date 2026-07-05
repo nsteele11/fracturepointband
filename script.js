@@ -28,7 +28,7 @@ const MERCH_PRODUCTS = [
         shortDescription: 'Classic unisex band tee featuring the FracturePoint logo.',
         description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows, rehearsals, or everyday wear.',
         price: '$25',
-        image: 'merch/fracturepoint-tee.svg',
+        image: 'merch/fracturepoint-tee.png',
         squareUrl: ''
     },
     {
@@ -37,7 +37,7 @@ const MERCH_PRODUCTS = [
         shortDescription: 'Flattering v-neck cut with the FracturePoint logo.',
         description: 'Designed with a tailored women\'s fit and a soft v-neckline. Lightweight, breathable fabric with the FracturePoint logo front and center. A fan favorite for concerts and casual wear.',
         price: '$28',
-        image: 'merch/womens-vneck.svg',
+        image: 'merch/womens-vneck.png',
         squareUrl: ''
     },
     {
@@ -46,16 +46,7 @@ const MERCH_PRODUCTS = [
         shortDescription: 'Premium pullover hoodie for cooler nights and long sets.',
         description: 'Stay warm in style with our heavyweight FracturePoint hoodie. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
         price: '$45',
-        image: 'merch/fracturepoint-hoodie.svg',
-        squareUrl: ''
-    },
-    {
-        id: 'stickers',
-        name: 'FracturePoint Stickers',
-        shortDescription: 'Sticker pack with assorted FracturePoint designs.',
-        description: 'Rep the band anywhere with our FracturePoint sticker pack. Includes multiple die-cut designs — ideal for guitars, laptops, water bottles, and anywhere else you want to show your support.',
-        price: '$5',
-        image: 'merch/fracturepoint-stickers.svg',
+        image: 'merch/fracturepoint-hoodie.png',
         squareUrl: ''
     }
 ];
@@ -864,9 +855,33 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastTrackedPage = null;
 
     function getUrlForPage(page) {
-        if (page === 'shows') return '/';
-        if (page === 'merch') return '/merch';
+        const onIndexHtml = /index\.html$/i.test(location.pathname);
+        const isFile = location.protocol === 'file:';
+
+        if (page === 'shows') {
+            if (onIndexHtml || isFile) {
+                return location.pathname.replace(/[?#].*$/, '');
+            }
+            return location.pathname.replace(/\/merch\/?$/, '/').split('?')[0] || '/';
+        }
+        if (page === 'merch') {
+            if (onIndexHtml || isFile) {
+                return location.pathname.replace(/[?#].*$/, '') + '?page=merch';
+            }
+            return '/merch';
+        }
+        if (onIndexHtml || isFile) {
+            return location.pathname.replace(/[?#].*$/, '') + '?page=' + page;
+        }
         return '/?page=' + page;
+    }
+
+    function safeReplaceUrl(url) {
+        try {
+            history.replaceState(null, '', url);
+        } catch (err) {
+            // file:// and some embedded browsers reject absolute path updates
+        }
     }
 
     function getPagePathForTracking(page) {
@@ -912,6 +927,10 @@ document.addEventListener('DOMContentLoaded', function() {
             section.classList.toggle('active', section.id === page);
         });
 
+        if (page === 'merch') {
+            window.scrollTo(0, 0);
+        }
+
         if (page === 'press' && typeof loadEpkPdf === 'function') loadEpkPdf();
 
         // Keep the homepage clean (/) unless user explicitly deep-linked or clicked a nav item.
@@ -925,12 +944,12 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         if (updateUrlMode === 'hash') {
-            history.replaceState(null, '', location.pathname + location.search + '#' + page);
+            safeReplaceUrl(location.pathname + location.search + '#' + page);
             trackVirtualPageview(page);
             return;
         }
         if (updateUrlMode === 'query') {
-            history.replaceState(null, '', getUrlForPage(page));
+            safeReplaceUrl(getUrlForPage(page));
             trackVirtualPageview(page);
             return;
         }
@@ -941,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
             trackVirtualPageview(page);
             return;
         }
-        history.replaceState(null, '', getUrlForPage(page));
+        safeReplaceUrl(getUrlForPage(page));
         trackVirtualPageview(page);
     }
 
@@ -966,11 +985,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Process URL first (query params survive redirects; hash often does not)
     syncFromUrl();
 
+    // Merch store — render before nav clicks so products appear immediately
+    initMerch();
+
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
+            const page = this.getAttribute('data-page');
+            if (!page) return;
             // Clicking nav should always produce a shareable URL.
-            showSection(this.getAttribute('data-page'), 'query');
+            showSection(page, 'query');
         });
     });
 
@@ -984,9 +1008,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load media gallery (videos + photos with tabs)
     initMediaGallery();
-
-    // Merch store
-    initMerch();
 
     // EPK PDF viewer
     loadEpkPdf = initEpkPdfViewer();
