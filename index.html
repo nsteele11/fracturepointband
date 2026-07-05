@@ -28,6 +28,7 @@
                 <li><a href="?page=shows" class="nav-link active" data-page="shows">Upcoming Shows</a></li>
                 <li><a href="?page=video" class="nav-link" data-page="video">Video & Photos</a></li>
                 <li><a href="?page=press" class="nav-link" data-page="press">Press & EPK</a></li>
+                <li><a href="/merch" class="nav-link" data-page="merch">Merch</a></li>
             </ul>
         </div>
     </nav>
@@ -139,6 +140,15 @@
             </div>
         </section>
 
+        <!-- Merch Section -->
+        <section id="merch" class="page-section">
+            <div class="content-wrapper">
+                <h2 class="section-title">Merch</h2>
+                <p class="merch-intro">Official FracturePoint merchandise — quality apparel and accessories for fans who want to rep the band.</p>
+                <div id="merch-grid" class="merch-grid" aria-live="polite"></div>
+            </div>
+        </section>
+
         <!-- Photos & Video Section -->
         <section id="video" class="page-section">
             <div class="content-wrapper">
@@ -174,6 +184,26 @@
             </div>
         </section>
     </main>
+
+    <!-- Merch product detail modal -->
+    <div id="merch-modal" class="merch-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="merch-modal-title">
+        <div class="merch-modal-backdrop" data-merch-close></div>
+        <div class="merch-modal-panel">
+            <button type="button" class="merch-modal-close" aria-label="Close product details" data-merch-close>&times;</button>
+            <div class="merch-modal-body">
+                <div class="merch-modal-image-wrap">
+                    <img id="merch-modal-image" src="" alt="">
+                </div>
+                <div class="merch-modal-details">
+                    <h3 id="merch-modal-title" class="merch-modal-title"></h3>
+                    <p id="merch-modal-price" class="merch-modal-price"></p>
+                    <p id="merch-modal-description" class="merch-modal-description"></p>
+                    <a id="merch-modal-buy" class="merch-buy-btn" href="#" target="_blank" rel="noopener noreferrer">Buy Now</a>
+                    <p id="merch-modal-unavailable" class="merch-unavailable-msg" hidden>Purchase link coming soon — check back shortly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Lightbox: outside main/section so fixed positioning works in Safari -->
     <div id="lightbox" class="lightbox" aria-hidden="true">

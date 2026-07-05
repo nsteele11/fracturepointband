@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="FracturePoint Tee">
+  <rect width="400" height="400" fill="#0a0a0a"/>
+  <rect x="40" y="40" width="320" height="320" fill="none" stroke="#B8A082" stroke-width="2" rx="8"/>
+  <path d="M130 120 L200 90 L270 120 L250 280 L150 280 Z" fill="#1a1a1a" stroke="#B8A082" stroke-width="2"/>
+  <text x="200" y="340" text-anchor="middle" fill="#B8A082" font-family="system-ui,sans-serif" font-size="18" font-weight="600" letter-spacing="2">FRACTUREPOINT TEE</text>
+</svg>

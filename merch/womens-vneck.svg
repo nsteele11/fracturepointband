@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="Fracture Point Womens V-neck">
+  <rect width="400" height="400" fill="#0a0a0a"/>
+  <rect x="40" y="40" width="320" height="320" fill="none" stroke="#B8A082" stroke-width="2" rx="8"/>
+  <path d="M140 115 Q200 155 260 115 L245 280 L155 280 Z" fill="#1a1a1a" stroke="#B8A082" stroke-width="2"/>
+  <text x="200" y="330" text-anchor="middle" fill="#B8A082" font-family="system-ui,sans-serif" font-size="16" font-weight="600" letter-spacing="1">WOMENS V-NECK</text>
+</svg>

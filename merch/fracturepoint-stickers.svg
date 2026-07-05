@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" role="img" aria-label="FracturePoint Stickers">
+  <rect width="400" height="400" fill="#0a0a0a"/>
+  <rect x="40" y="40" width="320" height="320" fill="none" stroke="#B8A082" stroke-width="2" rx="8"/>
+  <rect x="110" y="130" width="80" height="80" fill="#1a1a1a" stroke="#B8A082" stroke-width="2" rx="4" transform="rotate(-8 150 170)"/>
+  <rect x="210" y="120" width="80" height="80" fill="#1a1a1a" stroke="#B8A082" stroke-width="2" rx="4" transform="rotate(12 250 160)"/>
+  <rect x="155" y="220" width="90" height="90" fill="#1a1a1a" stroke="#B8A082" stroke-width="2" rx="4" transform="rotate(-5 200 265)"/>
+  <text x="200" y="340" text-anchor="middle" fill="#B8A082" font-family="system-ui,sans-serif" font-size="18" font-weight="600" letter-spacing="2">FRACTUREPOINT STICKERS</text>
+</svg>

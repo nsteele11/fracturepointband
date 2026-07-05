@@ -135,7 +135,8 @@ body::before {
 }
 
 #video,
-#press {
+#press,
+#merch {
     position: relative;
     z-index: 2;
 }
@@ -1206,6 +1207,283 @@ body::before {
     .shows-table th,
     .shows-table td {
         padding: 0.8rem 1rem;
+    }
+
+    .merch-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .merch-modal-body {
+        flex-direction: column;
+    }
+
+    .merch-modal-image-wrap {
+        flex: none;
+        max-height: 280px;
+    }
+
+    .merch-modal-panel {
+        margin: 1rem;
+        max-height: calc(100vh - 2rem);
+    }
+}
+
+/* Merch Section */
+.merch-intro {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 640px;
+    margin: -1.5rem auto 3rem;
+    line-height: 1.7;
+}
+
+.merch-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.merch-card {
+    background: linear-gradient(135deg, rgba(184, 160, 130, 0.1) 0%, rgba(0, 0, 0, 0.3) 100%);
+    border: 2px solid var(--pewter-gold);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.merch-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(184, 160, 130, 0.2);
+    border-color: var(--pewter-gold-hover);
+}
+
+.merch-card-button {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+
+.merch-card-image-wrap {
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(184, 160, 130, 0.25);
+}
+
+.merch-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.merch-card:hover .merch-card-image {
+    transform: scale(1.03);
+}
+
+.merch-card-info {
+    padding: 1.5rem;
+}
+
+.merch-card-title {
+    color: var(--pewter-gold);
+    font-size: 1.15rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+}
+
+.merch-card-desc {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.merch-card-price {
+    display: block;
+    color: var(--pewter-gold-hover);
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.merch-card-cta {
+    display: inline-block;
+    color: var(--pewter-gold);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--pewter-gold);
+    padding-bottom: 2px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+
+.merch-card:hover .merch-card-cta {
+    color: var(--pewter-gold-hover);
+    border-bottom-color: var(--pewter-gold-hover);
+}
+
+.merch-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.merch-modal[aria-hidden="false"] {
+    visibility: visible;
+    opacity: 1;
+}
+
+body.merch-modal-open {
+    overflow: hidden;
+}
+
+.merch-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(4px);
+}
+
+.merch-modal-panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 900px;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+    margin: 2rem;
+    background: linear-gradient(135deg, rgba(20, 20, 20, 0.98) 0%, rgba(0, 0, 0, 0.98) 100%);
+    border: 2px solid var(--pewter-gold);
+    border-radius: 8px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+}
+
+.merch-modal-close {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 2;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--pewter-gold);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--pewter-gold);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.merch-modal-close:hover {
+    background: var(--pewter-gold);
+    color: var(--bg-black);
+}
+
+.merch-modal-body {
+    display: flex;
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.merch-modal-image-wrap {
+    flex: 0 0 45%;
+    max-height: 420px;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid rgba(184, 160, 130, 0.3);
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.merch-modal-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.merch-modal-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: 1rem;
+}
+
+.merch-modal-title {
+    color: var(--pewter-gold);
+    font-size: 1.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 0.75rem;
+}
+
+.merch-modal-price {
+    color: var(--pewter-gold-hover);
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+}
+
+.merch-modal-description {
+    color: var(--text-light);
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+}
+
+.merch-buy-btn {
+    display: inline-block;
+    align-self: flex-start;
+    color: var(--bg-black);
+    background-color: var(--pewter-gold);
+    text-decoration: none;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    padding: 0.85rem 2rem;
+    border: 2px solid var(--pewter-gold);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.merch-buy-btn:hover {
+    background-color: var(--pewter-gold-hover);
+    border-color: var(--pewter-gold-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(184, 160, 130, 0.4);
+}
+
+.merch-unavailable-msg {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-style: italic;
+}
+
+@media (min-width: 1024px) {
+    .merch-grid {
+        grid-template-columns: repeat(4, 1fr);
     }
 }
 

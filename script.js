@@ -20,6 +20,46 @@ const CLOUDINARY_CATEGORIES = { 'live-shows': 'Live Shows', 'the-band': 'The Ban
 // Categories to always show as grayed out / disabled until photos/videos are added - remove from array when ready
 const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 
+// Merch catalog — replace image paths with product photos and squareUrl with Square checkout links when ready
+const MERCH_PRODUCTS = [
+    {
+        id: 'tee',
+        name: 'FracturePoint Tee',
+        shortDescription: 'Classic unisex band tee featuring the FracturePoint logo.',
+        description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows, rehearsals, or everyday wear.',
+        price: '$25',
+        image: 'merch/fracturepoint-tee.svg',
+        squareUrl: ''
+    },
+    {
+        id: 'womens-vneck',
+        name: 'Fracture Point Womens V-neck',
+        shortDescription: 'Flattering v-neck cut with the FracturePoint logo.',
+        description: 'Designed with a tailored women\'s fit and a soft v-neckline. Lightweight, breathable fabric with the FracturePoint logo front and center. A fan favorite for concerts and casual wear.',
+        price: '$28',
+        image: 'merch/womens-vneck.svg',
+        squareUrl: ''
+    },
+    {
+        id: 'hoodie',
+        name: 'FracturePoint Hoodie',
+        shortDescription: 'Premium pullover hoodie for cooler nights and long sets.',
+        description: 'Stay warm in style with our heavyweight FracturePoint hoodie. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
+        price: '$45',
+        image: 'merch/fracturepoint-hoodie.svg',
+        squareUrl: ''
+    },
+    {
+        id: 'stickers',
+        name: 'FracturePoint Stickers',
+        shortDescription: 'Sticker pack with assorted FracturePoint designs.',
+        description: 'Rep the band anywhere with our FracturePoint sticker pack. Includes multiple die-cut designs — ideal for guitars, laptops, water bottles, and anywhere else you want to show your support.',
+        price: '$5',
+        image: 'merch/fracturepoint-stickers.svg',
+        squareUrl: ''
+    }
+];
+
 // Fetch and parse Google Sheet data
 async function fetchShowsData() {
     try {
@@ -723,13 +763,119 @@ function initMediaGallery() {
     });
 }
 
+function initMerch() {
+    const grid = document.getElementById('merch-grid');
+    const modal = document.getElementById('merch-modal');
+    if (!grid || !modal) return;
+
+    const modalImage = document.getElementById('merch-modal-image');
+    const modalTitle = document.getElementById('merch-modal-title');
+    const modalPrice = document.getElementById('merch-modal-price');
+    const modalDescription = document.getElementById('merch-modal-description');
+    const modalBuy = document.getElementById('merch-modal-buy');
+    const modalUnavailable = document.getElementById('merch-modal-unavailable');
+    let activeProductId = null;
+
+    function trackMerchEvent(eventName, product) {
+        if (typeof window.gtag !== 'function' || !product) return;
+        window.gtag('event', eventName, {
+            item_id: product.id,
+            item_name: product.name,
+            price: product.price,
+            page_path: '/merch'
+        });
+    }
+
+    function openProductModal(product) {
+        activeProductId = product.id;
+        modalImage.src = product.image;
+        modalImage.alt = product.name;
+        modalTitle.textContent = product.name;
+        modalPrice.textContent = product.price;
+        modalDescription.textContent = product.description;
+
+        const hasSquareLink = Boolean(product.squareUrl);
+        modalBuy.hidden = !hasSquareLink;
+        modalUnavailable.hidden = hasSquareLink;
+
+        if (hasSquareLink) {
+            modalBuy.href = product.squareUrl;
+            modalBuy.setAttribute('aria-label', 'Buy ' + product.name + ' on Square');
+        } else {
+            modalBuy.removeAttribute('href');
+        }
+
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('merch-modal-open');
+        trackMerchEvent('view_item', product);
+    }
+
+    function closeProductModal() {
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('merch-modal-open');
+        activeProductId = null;
+    }
+
+    grid.innerHTML = MERCH_PRODUCTS.map(function(product) {
+        return (
+            '<article class="merch-card" data-product-id="' + product.id + '">' +
+                '<button type="button" class="merch-card-button" aria-label="View details for ' + product.name + '">' +
+                    '<div class="merch-card-image-wrap">' +
+                        '<img src="' + product.image + '" alt="' + product.name + '" class="merch-card-image" loading="lazy">' +
+                    '</div>' +
+                    '<div class="merch-card-info">' +
+                        '<h3 class="merch-card-title">' + product.name + '</h3>' +
+                        '<p class="merch-card-desc">' + product.shortDescription + '</p>' +
+                        '<span class="merch-card-price">' + product.price + '</span>' +
+                        '<span class="merch-card-cta">View Details</span>' +
+                    '</div>' +
+                '</button>' +
+            '</article>'
+        );
+    }).join('');
+
+    grid.addEventListener('click', function(e) {
+        const card = e.target.closest('.merch-card');
+        if (!card) return;
+        const product = MERCH_PRODUCTS.find(function(p) { return p.id === card.getAttribute('data-product-id'); });
+        if (product) openProductModal(product);
+    });
+
+    modal.querySelectorAll('[data-merch-close]').forEach(function(el) {
+        el.addEventListener('click', closeProductModal);
+    });
+
+    modalBuy.addEventListener('click', function() {
+        const product = MERCH_PRODUCTS.find(function(p) { return p.id === activeProductId; });
+        if (product && product.squareUrl) trackMerchEvent('begin_checkout', product);
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeProductModal();
+    });
+}
+
 // Navigation functionality
 document.addEventListener('DOMContentLoaded', function() {
     const navLinks = document.querySelectorAll('.nav-link');
     const sections = document.querySelectorAll('.page-section');
-    const VALID_PAGES = ['shows', 'video', 'press'];
+    const VALID_PAGES = ['shows', 'video', 'press', 'merch'];
     let loadEpkPdf = null;
     let lastTrackedPage = null;
+
+    function getUrlForPage(page) {
+        if (page === 'shows') return '/';
+        if (page === 'merch') return '/merch';
+        return '/?page=' + page;
+    }
+
+    function getPagePathForTracking(page) {
+        return getUrlForPage(page);
+    }
+
+    function isMerchPath() {
+        return /\/merch\/?$/.test(location.pathname || '');
+    }
 
     function trackVirtualPageview(page) {
         // GA4 SPA tracking: send a virtual page_view on section changes.
@@ -741,11 +887,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const titles = {
             shows: 'Upcoming Shows',
             video: 'Video & Photos',
-            press: 'Press & EPK'
+            press: 'Press & EPK',
+            merch: 'Merch'
         };
 
         const pageTitle = 'FracturePoint - ' + (titles[page] || 'FracturePoint');
-        const pagePath = location.pathname + '?page=' + page;
+        const pagePath = getPagePathForTracking(page);
         const pageLocation = location.origin + pagePath;
 
         window.gtag('event', 'page_view', {
@@ -769,30 +916,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Keep the homepage clean (/) unless user explicitly deep-linked or clicked a nav item.
         // updateUrlMode:
-        // - 'query': always write ?page=
+        // - 'query': always write shareable URL for the page
         // - 'hash': always write #page
         // - 'none': do not change URL
         // - undefined: only write when necessary
-        if (updateUrlMode === 'none') return;
+        if (updateUrlMode === 'none') {
+            trackVirtualPageview(page);
+            return;
+        }
         if (updateUrlMode === 'hash') {
             history.replaceState(null, '', location.pathname + location.search + '#' + page);
+            trackVirtualPageview(page);
             return;
         }
         if (updateUrlMode === 'query') {
-            history.replaceState(null, '', location.pathname + '?page=' + page);
+            history.replaceState(null, '', getUrlForPage(page));
+            trackVirtualPageview(page);
             return;
         }
         // default behavior: if we're on a deep link already, keep it; otherwise don't add ?page=shows.
-        const hasQuery = /[?&]page=(shows|video|press)/.test(location.search || '');
-        const hasHash = /^#(shows|video|press)$/.test(location.hash || '');
-        if (!hasQuery && !hasHash && page === 'shows') return;
-        history.replaceState(null, '', location.pathname + '?page=' + page);
-
+        const hasQuery = /[?&]page=(shows|video|press|merch)/.test(location.search || '');
+        const hasHash = /^#(shows|video|press|merch)$/.test(location.hash || '');
+        if (!hasQuery && !hasHash && !isMerchPath() && page === 'shows') {
+            trackVirtualPageview(page);
+            return;
+        }
+        history.replaceState(null, '', getUrlForPage(page));
         trackVirtualPageview(page);
     }
 
     function getPageFromUrl() {
-        var m = location.search.match(/[?&]page=(shows|video|press)/);
+        if (isMerchPath()) return 'merch';
+        var m = location.search.match(/[?&]page=(shows|video|press|merch)/);
         if (m) return m[1];
         var h = (location.hash || '').replace(/^#/, '');
         return VALID_PAGES.includes(h) ? h : 'shows';
@@ -800,15 +955,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function syncFromUrl() {
         const page = getPageFromUrl();
-        const hasQuery = /[?&]page=(shows|video|press)/.test(location.search || '');
-        const hasHash = /^#(shows|video|press)$/.test(location.hash || '');
+        const hasQuery = /[?&]page=(shows|video|press|merch)/.test(location.search || '');
+        const hasHash = /^#(shows|video|press|merch)$/.test(location.hash || '');
         // If the user came in with #press/#video keep the hash; if they came with ?page= keep the query.
         if (hasHash) showSection(page, 'hash');
-        else if (hasQuery) showSection(page, 'query');
+        else if (hasQuery || isMerchPath()) showSection(page, isMerchPath() ? 'none' : 'query');
         else showSection(page, 'none');
-
-        // Ensure first view is tracked even if URL stays clean (/).
-        trackVirtualPageview(page);
     }
 
     // Process URL first (query params survive redirects; hash often does not)
@@ -832,6 +984,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load media gallery (videos + photos with tabs)
     initMediaGallery();
+
+    // Merch store
+    initMerch();
 
     // EPK PDF viewer
     loadEpkPdf = initEpkPdfViewer();
