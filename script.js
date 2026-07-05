@@ -767,6 +767,11 @@ function initMerch() {
     const modalUnavailable = document.getElementById('merch-modal-unavailable');
     let activeProductId = null;
 
+    modal.setAttribute('aria-hidden', 'true');
+    modal.hidden = true;
+    if (modalBuy) modalBuy.hidden = true;
+    if (modalUnavailable) modalUnavailable.hidden = false;
+
     function trackMerchEvent(eventName, product) {
         if (typeof window.gtag !== 'function' || !product) return;
         window.gtag('event', eventName, {
@@ -797,12 +802,14 @@ function initMerch() {
         }
 
         modal.setAttribute('aria-hidden', 'false');
+        modal.hidden = false;
         document.body.classList.add('merch-modal-open');
         trackMerchEvent('view_item', product);
     }
 
     function closeProductModal() {
         modal.setAttribute('aria-hidden', 'true');
+        modal.hidden = true;
         document.body.classList.remove('merch-modal-open');
         activeProductId = null;
     }
@@ -836,10 +843,12 @@ function initMerch() {
         el.addEventListener('click', closeProductModal);
     });
 
-    modalBuy.addEventListener('click', function() {
-        const product = MERCH_PRODUCTS.find(function(p) { return p.id === activeProductId; });
-        if (product && product.squareUrl) trackMerchEvent('begin_checkout', product);
-    });
+    if (modalBuy) {
+        modalBuy.addEventListener('click', function() {
+            const product = MERCH_PRODUCTS.find(function(p) { return p.id === activeProductId; });
+            if (product && product.squareUrl) trackMerchEvent('begin_checkout', product);
+        });
+    }
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && modal.getAttribute('aria-hidden') === 'false') closeProductModal();
@@ -982,18 +991,12 @@ document.addEventListener('DOMContentLoaded', function() {
         else showSection(page, 'none');
     }
 
-    // Process URL first (query params survive redirects; hash often does not)
-    syncFromUrl();
-
-    // Merch store — render before nav clicks so products appear immediately
-    initMerch();
-
+    // Wire navigation first so tab clicks always work
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             const page = this.getAttribute('data-page');
             if (!page) return;
-            // Clicking nav should always produce a shareable URL.
             showSection(page, 'query');
         });
     });
@@ -1001,19 +1004,33 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('hashchange', syncFromUrl);
     window.addEventListener('popstate', syncFromUrl);
 
+    // Process URL (query params survive redirects; hash often does not)
+    syncFromUrl();
+
+    try {
+        initMerch();
+    } catch (err) {
+        console.error('Merch init error:', err);
+    }
+
     // Load shows data
     fetchShowsData().then(({ upcomingShows, pastShows }) => {
         renderShows(upcomingShows, pastShows);
     });
 
     // Load media gallery (videos + photos with tabs)
-    initMediaGallery();
+    try {
+        initMediaGallery();
+    } catch (err) {
+        console.error('Media gallery init error:', err);
+    }
 
     // EPK PDF viewer
     loadEpkPdf = initEpkPdfViewer();
 
     // If we landed on press, trigger PDF load now
     if (getPageFromUrl() === 'press') loadEpkPdf();
+});
 
 function initEpkPdfViewer() {
     const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
@@ -1039,7 +1056,18 @@ function initEpkPdfViewer() {
         if (navEl) navEl.style.display = 'none';
     }
 
+    function showCustomViewer() {
+        if (fallbackIframe) fallbackIframe.style.display = 'none';
+        if (canvas) canvas.style.display = 'block';
+        if (navEl) navEl.style.display = '';
+    }
+
     if (!canvas || typeof pdfjsLib === 'undefined') {
+        showFallback();
+        return function() {};
+    }
+
+    if (!prevBtn || !nextBtn || !zoomOutBtn || !zoomInBtn || !pageInfo) {
         showFallback();
         return function() {};
     }
@@ -1135,5 +1163,3 @@ function initEpkPdfViewer() {
 
     return loadPdf;
 }
-
-});

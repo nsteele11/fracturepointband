@@ -1380,17 +1380,13 @@ body::before {
     position: fixed;
     inset: 0;
     z-index: 2000;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
-    visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
 
-.merch-modal[aria-hidden="false"] {
-    visibility: visible;
-    opacity: 1;
+.merch-modal[aria-hidden="false"]:not([hidden]) {
+    display: flex;
 }
 
 body.merch-modal-open {
@@ -1519,6 +1515,11 @@ body.merch-modal-open {
     color: var(--text-muted);
     font-size: 0.95rem;
     font-style: italic;
+}
+
+.merch-unavailable-msg[hidden],
+.merch-buy-btn[hidden] {
+    display: none !important;
 }
 
 @media (min-width: 1024px) {
