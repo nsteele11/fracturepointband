@@ -24,7 +24,7 @@ const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 const MERCH_PRODUCTS = [
     {
         id: 'tee',
-        name: 'FP Tee',
+        name: 'FRACTUREPOINT TEE',
         shortDescription: 'Premium unisex Bella + Canvas classic band tee.',
         description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows and everyday wear.',
         price: '$30',
