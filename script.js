@@ -29,7 +29,8 @@ const MERCH_PRODUCTS = [
         description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows and everyday wear.',
         price: '$30',
         image: 'merch/fracturepoint-tee.png',
-        squareUrl: ''
+        squareUrl: 'https://fracturepoint-band.square.site/product/tshirt-fp/XNPTFEIEFNLBKT52ZUXRWOUW?cs=true&cst=custom',
+        squareEmbed: true
     },
     {
         id: 'womens-vneck',
@@ -38,7 +39,8 @@ const MERCH_PRODUCTS = [
         description: 'Designed with a tailored women\'s fit and a soft v-neckline. Lightweight, breathable fabric with the FracturePoint logo front and center. A fan favorite for concerts and casual wear.',
         price: '$30',
         image: 'merch/womens-vneck.png',
-        squareUrl: ''
+        squareUrl: 'https://fracturepoint-band.square.site/product/womensvneck-fp/UEFJ5KNTSOTGMRRGD464OFHK?cs=true&cst=custom',
+        squareEmbed: true
     },
     {
         id: 'hoodie',
@@ -47,7 +49,7 @@ const MERCH_PRODUCTS = [
         description: 'Stay warm in style with our heavyweight FracturePoint sweatshirt. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
         price: '$50',
         image: 'merch/fracturepoint-hoodie.png',
-        squareUrl: 'https://square.link/u/TdEN6PWL?src=embed',
+        squareUrl: 'https://fracturepoint-band.square.site/product/sweatshirt-fp/JLHM3RPUOXSKNB2CLBJWKBDO?cs=true&cst=custom',
         squareEmbed: true
     }
 ];
