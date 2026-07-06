@@ -1308,14 +1308,14 @@ body::before {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem;
+    padding: 0.35rem 0.4rem 0.25rem;
 }
 
 .merch-card-image {
     width: auto;
     height: auto;
-    max-width: 88%;
-    max-height: 88%;
+    max-width: 98%;
+    max-height: 96%;
     object-fit: contain;
     display: block;
     transition: transform 0.3s ease;
@@ -1326,7 +1326,7 @@ body::before {
 }
 
 .merch-card-info {
-    padding: 1.5rem;
+    padding: 0.75rem 1.25rem 1.25rem;
 }
 
 .merch-card-title {
