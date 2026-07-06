@@ -28,7 +28,7 @@ const MERCH_PRODUCTS = [
         shortDescription: 'Premium unisex Bella + Canvas classic band tee.',
         description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows and everyday wear.',
         price: '$30',
-        image: 'merch/fracturepoint-tee.png',
+        image: 'merch-images/fracturepoint-tee.png',
         squareUrl: 'https://fracturepoint-band.square.site/product/tshirt-fp/XNPTFEIEFNLBKT52ZUXRWOUW?cs=true&cst=custom',
         squareEmbed: true
     },
@@ -38,7 +38,7 @@ const MERCH_PRODUCTS = [
         shortDescription: 'Premium women\'s Bella + Canvas v-neck cut.',
         description: 'Designed with a tailored women\'s fit and a soft v-neckline. Lightweight, breathable fabric with the FracturePoint logo front and center. A fan favorite for concerts and casual wear.',
         price: '$30',
-        image: 'merch/womens-vneck.png',
+        image: 'merch-images/womens-vneck.png',
         squareUrl: 'https://fracturepoint-band.square.site/product/womensvneck-fp/UEFJ5KNTSOTGMRRGD464OFHK?cs=true&cst=custom',
         squareEmbed: true
     },
@@ -48,7 +48,7 @@ const MERCH_PRODUCTS = [
         shortDescription: 'Premium pullover hoodie.',
         description: 'Stay warm in style with our heavyweight FracturePoint sweatshirt. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
         price: '$50',
-        image: 'merch/fracturepoint-hoodie.png',
+        image: 'merch-images/fracturepoint-hoodie.png',
         squareUrl: 'https://fracturepoint-band.square.site/product/sweatshirt-fp/JLHM3RPUOXSKNB2CLBJWKBDO?cs=true&cst=custom',
         squareEmbed: true
     }
@@ -890,13 +890,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (onIndexHtml || isFile) {
                 return location.pathname.replace(/[?#].*$/, '');
             }
-            return location.pathname.replace(/\/merch\/?$/, '/').split('?')[0] || '/';
-        }
-        if (page === 'merch') {
-            if (onIndexHtml || isFile) {
-                return location.pathname.replace(/[?#].*$/, '') + '?page=merch';
-            }
-            return '/merch';
+            return '/';
         }
         if (onIndexHtml || isFile) {
             return location.pathname.replace(/[?#].*$/, '') + '?page=' + page;
@@ -913,6 +907,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function getPagePathForTracking(page) {
+        if (page === 'merch') return '/merch';
         return getUrlForPage(page);
     }
 
@@ -1006,7 +1001,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const hasHash = /^#(shows|video|press|merch)$/.test(location.hash || '');
         // If the user came in with #press/#video keep the hash; if they came with ?page= keep the query.
         if (hasHash) showSection(page, 'hash');
-        else if (hasQuery || isMerchPath()) showSection(page, isMerchPath() ? 'none' : 'query');
+        else if (hasQuery || isMerchPath()) showSection(page, 'query');
         else showSection(page, 'none');
     }
 

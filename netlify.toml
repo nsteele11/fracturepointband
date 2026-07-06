@@ -2,18 +2,16 @@
   publish = "."
   functions = "functions"
 
-# Merch SPA route — force rewrite so /merch wins over the merch/ image folder
+# Merch page — redirect /merch to query-param route (avoids folder/path conflicts)
 [[redirects]]
   from = "/merch"
-  to = "/index.html"
-  status = 200
-  force = true
+  to = "/?page=merch"
+  status = 301
 
 [[redirects]]
   from = "/merch/"
-  to = "/index.html"
-  status = 200
-  force = true
+  to = "/?page=merch"
+  status = 301
 
 # Rewrite /api/* to functions (works on custom domain)
 [[redirects]]
