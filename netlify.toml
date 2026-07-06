@@ -2,6 +2,19 @@
   publish = "."
   functions = "functions"
 
+# Merch SPA route — force rewrite so /merch wins over the merch/ image folder
+[[redirects]]
+  from = "/merch"
+  to = "/index.html"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/merch/"
+  to = "/index.html"
+  status = 200
+  force = true
+
 # Rewrite /api/* to functions (works on custom domain)
 [[redirects]]
   from = "/api/*"

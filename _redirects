@@ -1,3 +1,4 @@
 /api/cloudinary-list  /.netlify/functions/cloudinary-list  200
 /api/youtube-videos   /.netlify/functions/youtube-videos   200
-/merch  /index.html  200
+/merch  /index.html  200!
+/merch/  /index.html  200!
