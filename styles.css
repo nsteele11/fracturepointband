@@ -1246,6 +1246,14 @@ body::before {
     line-height: 1.7;
 }
 
+.merch-intro-text:first-of-type {
+    margin-bottom: 0.35rem;
+}
+
+.merch-intro-text:last-of-type {
+    margin-bottom: 0;
+}
+
 .merch-badges {
     display: flex;
     flex-wrap: wrap;
