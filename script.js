@@ -24,28 +24,28 @@ const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 const MERCH_PRODUCTS = [
     {
         id: 'tee',
-        name: 'FracturePoint Tee',
-        shortDescription: 'Classic unisex band tee featuring the FracturePoint logo.',
-        description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows, rehearsals, or everyday wear.',
-        price: '$25',
+        name: 'FP Tee',
+        shortDescription: 'Premium unisex Bella + Canvas classic band tee.',
+        description: 'Our signature FracturePoint tee is printed on soft, durable cotton with a comfortable unisex fit. Features the official band logo on the front — perfect for shows and everyday wear.',
+        price: '$30',
         image: 'merch/fracturepoint-tee.png',
         squareUrl: ''
     },
     {
         id: 'womens-vneck',
-        name: 'Fracture Point Womens V-neck',
-        shortDescription: 'Flattering v-neck cut with the FracturePoint logo.',
+        name: 'FracturePoint Vneck Tee',
+        shortDescription: 'Premium women\'s Bella + Canvas v-neck cut.',
         description: 'Designed with a tailored women\'s fit and a soft v-neckline. Lightweight, breathable fabric with the FracturePoint logo front and center. A fan favorite for concerts and casual wear.',
-        price: '$28',
+        price: '$30',
         image: 'merch/womens-vneck.png',
         squareUrl: ''
     },
     {
         id: 'hoodie',
-        name: 'FracturePoint Hoodie',
-        shortDescription: 'Premium pullover hoodie for cooler nights and long sets.',
-        description: 'Stay warm in style with our heavyweight FracturePoint hoodie. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
-        price: '$45',
+        name: 'FracturePoint Sweatshirt',
+        shortDescription: 'Premium pullover hoodie.',
+        description: 'Stay warm in style with our heavyweight FracturePoint sweatshirt. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
+        price: '$50',
         image: 'merch/fracturepoint-hoodie.png',
         squareUrl: ''
     }
