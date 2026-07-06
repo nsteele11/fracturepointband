@@ -47,7 +47,8 @@ const MERCH_PRODUCTS = [
         description: 'Stay warm in style with our heavyweight FracturePoint sweatshirt. Features a soft fleece interior, adjustable drawstring hood, and the band logo on the chest. Built for comfort on and off the stage.',
         price: '$50',
         image: 'merch/fracturepoint-hoodie.png',
-        squareUrl: ''
+        squareUrl: 'https://square.link/u/TdEN6PWL?src=embed',
+        squareEmbed: true
     }
 ];
 
@@ -764,12 +765,15 @@ function initMerch() {
     const modalPrice = document.getElementById('merch-modal-price');
     const modalDescription = document.getElementById('merch-modal-description');
     const modalBuy = document.getElementById('merch-modal-buy');
+    const modalSquareWrap = document.getElementById('merch-modal-square-wrap');
+    const modalSquareBuy = document.getElementById('merch-modal-square-buy');
     const modalUnavailable = document.getElementById('merch-modal-unavailable');
     let activeProductId = null;
 
     modal.setAttribute('aria-hidden', 'true');
     modal.hidden = true;
     if (modalBuy) modalBuy.hidden = true;
+    if (modalSquareWrap) modalSquareWrap.hidden = true;
     if (modalUnavailable) modalUnavailable.hidden = false;
 
     function trackMerchEvent(eventName, product) {
@@ -791,14 +795,20 @@ function initMerch() {
         modalDescription.textContent = product.description;
 
         const hasSquareLink = Boolean(product.squareUrl);
-        modalBuy.hidden = !hasSquareLink;
-        modalUnavailable.hidden = hasSquareLink;
+        const useSquareEmbed = hasSquareLink && product.squareEmbed;
 
-        if (hasSquareLink) {
+        if (modalSquareWrap) modalSquareWrap.hidden = !useSquareEmbed;
+        if (modalBuy) modalBuy.hidden = !hasSquareLink || useSquareEmbed;
+        if (modalUnavailable) modalUnavailable.hidden = hasSquareLink;
+
+        if (useSquareEmbed && modalSquareBuy) {
+            modalSquareBuy.href = product.squareUrl;
+            modalSquareBuy.setAttribute('aria-label', 'Buy ' + product.name + ' on Square');
+        } else if (hasSquareLink && modalBuy) {
             modalBuy.href = product.squareUrl;
             modalBuy.setAttribute('aria-label', 'Buy ' + product.name + ' on Square');
         } else {
-            modalBuy.removeAttribute('href');
+            if (modalBuy) modalBuy.removeAttribute('href');
         }
 
         modal.setAttribute('aria-hidden', 'false');
@@ -845,6 +855,13 @@ function initMerch() {
 
     if (modalBuy) {
         modalBuy.addEventListener('click', function() {
+            const product = MERCH_PRODUCTS.find(function(p) { return p.id === activeProductId; });
+            if (product && product.squareUrl) trackMerchEvent('begin_checkout', product);
+        });
+    }
+
+    if (modalSquareBuy) {
+        modalSquareBuy.addEventListener('click', function() {
             const product = MERCH_PRODUCTS.find(function(p) { return p.id === activeProductId; });
             if (product && product.squareUrl) trackMerchEvent('begin_checkout', product);
         });
