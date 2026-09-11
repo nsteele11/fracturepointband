@@ -2,6 +2,15 @@
   publish = "."
   functions = "functions"
 
+# Do not cache HTML, assets, or PDFs in browsers or on the Netlify CDN.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-store, no-cache, must-revalidate, max-age=0"
+    Pragma = "no-cache"
+    Expires = "0"
+    Netlify-CDN-Cache-Control = "no-store"
+
 # Merch page — redirect /merch to query-param route (avoids folder/path conflicts)
 [[redirects]]
   from = "/merch"

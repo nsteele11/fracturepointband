@@ -8,6 +8,8 @@ exports.handler = async (event) => {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+        'Netlify-CDN-Cache-Control': 'no-store',
     };
 
     if (event.httpMethod === 'OPTIONS') {
