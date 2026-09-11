@@ -20,6 +20,23 @@ const CLOUDINARY_CATEGORIES = { 'live-shows': 'Live Shows', 'the-band': 'The Ban
 // Categories to always show as grayed out / disabled until photos/videos are added - remove from array when ready
 const MANUALLY_DISABLED_CATEGORIES = ['the-band', 'behind-the-scenes'];
 
+// Homepage release campaign — swap these values for future singles (artwork, date, URLs, copy)
+const RELEASE_CAMPAIGN = {
+    enabled: true,
+    title: 'Violent Eyes',
+    kicker: 'Debut Single',
+    urgentKicker: 'Drops Tonight',
+    releasedKicker: 'Out Now',
+    dateLabel: 'Coming September 17 at Midnight',
+    artwork: 'images/VE CD - FRONT COVER FINAL.png',
+    artworkAlt: 'Violent Eyes — Debut Single cover artwork',
+    releaseDate: '2026-09-17T00:00:00-04:00',
+    preReleaseText: 'Pre-Save',
+    preReleaseUrl: 'https://distrokid.com/hyperfollow/fracturepoint3/violent-eyes',
+    postReleaseText: 'Listen Now',
+    postReleaseUrl: 'https://distrokid.com/hyperfollow/fracturepoint3/violent-eyes'
+};
+
 // Merch catalog — replace image paths with product photos and squareUrl with Square checkout links when ready
 const MERCH_PRODUCTS = [
     {
@@ -757,6 +774,166 @@ function initMediaGallery() {
     });
 }
 
+function padUnit(value) {
+    return String(Math.max(0, value)).padStart(2, '0');
+}
+
+function getReleaseRemaining(releaseMs, nowMs) {
+    const diff = releaseMs - nowMs;
+    if (diff <= 0) {
+        return { state: 'released', totalMs: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
+    }
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    const state = diff < 24 * 60 * 60 * 1000 ? 'urgent' : 'countdown';
+    return { state: state, totalMs: diff, days: days, hours: hours, minutes: minutes, seconds: seconds };
+}
+
+function prefersReducedMotion() {
+    return typeof window !== 'undefined'
+        && window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function setCountdownValue(el, nextValue) {
+    if (!el) return;
+    if (el.textContent === nextValue) return;
+    el.textContent = nextValue;
+    if (prefersReducedMotion()) return;
+    el.classList.remove('is-updating');
+    void el.offsetWidth;
+    el.classList.add('is-updating');
+}
+
+function initReleaseCampaign() {
+    const root = document.getElementById('release-campaign');
+    const campaign = RELEASE_CAMPAIGN;
+    if (!root || !campaign || campaign.enabled === false) return;
+
+    const releaseMs = Date.parse(campaign.releaseDate);
+    if (Number.isNaN(releaseMs)) {
+        console.error('Release campaign: invalid releaseDate', campaign.releaseDate);
+        return;
+    }
+
+    const title = campaign.title || '';
+    const artworkSrc = encodeURI(campaign.artwork || '');
+    const artworkAlt = campaign.artworkAlt || title;
+
+    root.innerHTML =
+        '<div class="release-campaign-panel">' +
+            '<a class="release-campaign-art" id="release-campaign-art-link" href="#">' +
+                '<img src="' + artworkSrc + '" alt="' + artworkAlt.replace(/"/g, '&quot;') + '">' +
+            '</a>' +
+            '<div class="release-campaign-body">' +
+                '<h2 class="release-campaign-title">' + title + '</h2>' +
+                '<p class="release-campaign-kicker" id="release-campaign-kicker"></p>' +
+                '<div class="release-campaign-countdown" id="release-campaign-countdown">' +
+                    '<div class="release-unit" data-unit="days" id="release-unit-days">' +
+                        '<span class="release-unit-value" id="release-days">00</span>' +
+                        '<span class="release-unit-label"><span class="unit-label-full">Days</span><span class="unit-label-short">Days</span></span>' +
+                    '</div>' +
+                    '<div class="release-unit" data-unit="hours">' +
+                        '<span class="release-unit-value" id="release-hours">00</span>' +
+                        '<span class="release-unit-label"><span class="unit-label-full">Hours</span><span class="unit-label-short">Hrs</span></span>' +
+                    '</div>' +
+                    '<div class="release-unit" data-unit="minutes">' +
+                        '<span class="release-unit-value" id="release-minutes">00</span>' +
+                        '<span class="release-unit-label"><span class="unit-label-full">Minutes</span><span class="unit-label-short">Min</span></span>' +
+                    '</div>' +
+                    '<div class="release-unit" data-unit="seconds">' +
+                        '<span class="release-unit-value" id="release-seconds">00</span>' +
+                        '<span class="release-unit-label"><span class="unit-label-full">Seconds</span><span class="unit-label-short">Sec</span></span>' +
+                    '</div>' +
+                '</div>' +
+                '<p class="release-campaign-date" id="release-campaign-date"></p>' +
+                '<a class="release-campaign-cta" id="release-campaign-cta" href="#">Pre-Save</a>' +
+            '</div>' +
+        '</div>';
+
+    const kickerEl = document.getElementById('release-campaign-kicker');
+    const dateEl = document.getElementById('release-campaign-date');
+    const countdownEl = document.getElementById('release-campaign-countdown');
+    const daysUnit = document.getElementById('release-unit-days');
+    const daysEl = document.getElementById('release-days');
+    const hoursEl = document.getElementById('release-hours');
+    const minutesEl = document.getElementById('release-minutes');
+    const secondsEl = document.getElementById('release-seconds');
+    const ctaEl = document.getElementById('release-campaign-cta');
+    const artLink = document.getElementById('release-campaign-art-link');
+    let timerId = null;
+    let lastState = '';
+
+    function applyLink(el, url) {
+        const hasUrl = Boolean(url) && url !== '#';
+        el.href = hasUrl ? url : '#';
+        if (hasUrl) {
+            el.target = '_blank';
+            el.rel = 'noopener noreferrer';
+        } else {
+            el.removeAttribute('target');
+            el.removeAttribute('rel');
+        }
+    }
+
+    function render(nowMs) {
+        const remaining = getReleaseRemaining(releaseMs, nowMs);
+
+        if (remaining.state !== lastState) {
+            lastState = remaining.state;
+            root.setAttribute('data-state', remaining.state);
+        }
+
+        if (remaining.state === 'released') {
+            kickerEl.textContent = campaign.releasedKicker || 'Out Now';
+            countdownEl.hidden = true;
+            dateEl.hidden = true;
+            dateEl.textContent = '';
+            ctaEl.textContent = campaign.postReleaseText || 'Listen Now';
+            applyLink(ctaEl, campaign.postReleaseUrl);
+            applyLink(artLink, campaign.postReleaseUrl);
+            if (timerId) {
+                clearInterval(timerId);
+                timerId = null;
+            }
+            return;
+        }
+
+        countdownEl.hidden = false;
+        ctaEl.textContent = campaign.preReleaseText || 'Pre-Save';
+        applyLink(ctaEl, campaign.preReleaseUrl);
+        applyLink(artLink, campaign.preReleaseUrl);
+
+        if (remaining.state === 'urgent') {
+            kickerEl.textContent = campaign.urgentKicker || 'Drops Tonight';
+            dateEl.hidden = true;
+            dateEl.textContent = '';
+            daysUnit.hidden = true;
+        } else {
+            kickerEl.textContent = campaign.kicker || 'Debut Single';
+            dateEl.hidden = false;
+            dateEl.textContent = campaign.dateLabel || '';
+            daysUnit.hidden = false;
+            setCountdownValue(daysEl, padUnit(remaining.days));
+        }
+
+        setCountdownValue(hoursEl, padUnit(remaining.hours));
+        setCountdownValue(minutesEl, padUnit(remaining.minutes));
+        setCountdownValue(secondsEl, padUnit(remaining.seconds));
+    }
+
+    root.hidden = false;
+    render(Date.now());
+    if (lastState !== 'released') {
+        timerId = setInterval(function() {
+            render(Date.now());
+        }, 1000);
+    }
+}
+
 function initMerch() {
     const grid = document.getElementById('merch-grid');
     const modal = document.getElementById('merch-modal');
@@ -1020,6 +1197,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Process URL (query params survive redirects; hash often does not)
     syncFromUrl();
+
+    try {
+        initReleaseCampaign();
+    } catch (err) {
+        console.error('Release campaign init error:', err);
+    }
 
     try {
         initMerch();
