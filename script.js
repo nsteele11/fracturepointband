@@ -1230,7 +1230,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initEpkPdfViewer() {
-    const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf';
+    const EPK_PDF_URL = 'epk/FracturePoint_EPK.pdf?v=20260911';
     const DEFAULT_SCALE = 0.8575;
     const MIN_SCALE = 0.5;
     const MAX_SCALE = 3;
